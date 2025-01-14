@@ -6,7 +6,6 @@
   <title>Магазин</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* Базовые стили для всего приложения */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -26,22 +25,26 @@
       text-align: center;
     }
 
-    p {
-      color: #666;
-      text-align: center;
-      margin: 10px 20px;
+    label, select, button {
+      width: 80%;
+      margin: 10px 0;
+      font-size: 16px;
     }
 
-    /* Кнопка */
+    select {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
     button {
       background-color: #007BFF;
       color: white;
-      padding: 15px 20px;
+      padding: 12px 15px;
       border: none;
-      border-radius: 8px;
+      border-radius: 5px;
       cursor: pointer;
       font-size: 16px;
-      margin-top: 20px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       transition: background-color 0.3s ease;
     }
@@ -50,71 +53,95 @@
       background-color: #0056b3;
     }
 
-    /* Адаптивный блок сообщения */
     #status-message {
       margin-top: 20px;
       color: green;
       font-size: 14px;
       text-align: center;
     }
-
-    /* Для мобильных устройств */
-    @media (max-width: 768px) {
-      h1 {
-        font-size: 20px;
-      }
-
-      button {
-        font-size: 14px;
-        padding: 12px 15px;
-      }
-    }
-
-    /* Для очень маленьких экранов */
-    @media (max-width: 480px) {
-      h1 {
-        font-size: 18px;
-      }
-
-      p {
-        font-size: 14px;
-      }
-
-      button {
-        font-size: 12px;
-        padding: 10px 12px;
-      }
-    }
   </style>
 </head>
 <body>
   <h1>Добро пожаловать в магазин!</h1>
-  <p>Выберите товар и нажмите кнопку, чтобы оформить заказ.</p>
-  <button id="order-button">Заказать</button>
-  <p id="status-message"></p>
+  <p id="status-message">Выберите район и улицу для доставки:</p>
+
+  <!-- Выбор района -->
+  <label for="district-select">Район:</label>
+  <select id="district-select">
+    <option value="">Выберите район</option>
+    <option value="Центральный">Центральный</option>
+    <option value="Северный">Северный</option>
+    <option value="Южный">Южный</option>
+  </select>
+
+  <!-- Выбор улицы -->
+  <label for="street-select">Улица:</label>
+  <select id="street-select" disabled>
+    <option value="">Сначала выберите район</option>
+  </select>
+
+  <button id="save-address-button" disabled>Сохранить адрес</button>
 
   <script>
-    const orderButton = document.getElementById('order-button');
+    const districtSelect = document.getElementById('district-select');
+    const streetSelect = document.getElementById('street-select');
+    const saveAddressButton = document.getElementById('save-address-button');
     const statusMessage = document.getElementById('status-message');
 
-    // Проверка доступности WebApp API
-    if (window.Telegram && window.Telegram.WebApp) {
-      const webApp = Telegram.WebApp;
-      webApp.ready(); // Инициализация WebApp API
+    // Улицы по районам
+    const streetsByDistrict = {
+      'Центральный': ['ул. Ленина', 'ул. Пушкина', 'ул. Горького'],
+      'Северный': ['ул. Победы', 'ул. Садовая', 'ул. Парковая'],
+      'Южный': ['ул. Молодёжная', 'ул. Спортивная', 'ул. Приморская']
+    };
 
-      statusMessage.textContent = "Telegram Web App API подключен!";
+    // Обновление списка улиц при выборе района
+    districtSelect.addEventListener('change', () => {
+      const selectedDistrict = districtSelect.value;
 
-      // Обработчик нажатия на кнопку
-      orderButton.addEventListener('click', () => {
-        webApp.showAlert("Ваш заказ оформлен!");
-        webApp.sendData(JSON.stringify({ order: "Подтверждён" })); // Отправка данных в Telegram
-      });
-    } else {
-      statusMessage.textContent = "Telegram Web App API недоступен.";
-      orderButton.addEventListener('click', () => {
-        alert("Ваш заказ оформлен, но без интеграции с Telegram.");
-      });
-    }
+      // Очистка списка улиц
+      streetSelect.innerHTML = '<option value="">Выберите улицу</option>';
+
+      if (selectedDistrict && streetsByDistrict[selectedDistrict]) {
+        // Заполнение улиц для выбранного района
+        streetsByDistrict[selectedDistrict].forEach(street => {
+          const option = document.createElement('option');
+          option.value = street;
+          option.textContent = street;
+          streetSelect.appendChild(option);
+        });
+        streetSelect.disabled = false;
+      } else {
+        streetSelect.disabled = true;
+      }
+
+      saveAddressButton.disabled = true;
+    });
+
+    // Активация кнопки сохранения при выборе улицы
+    streetSelect.addEventListener('change', () => {
+      saveAddressButton.disabled = !streetSelect.value;
+    });
+
+    // Сохранение адреса и отправка данных в Telegram
+    saveAddressButton.addEventListener('click', () => {
+      const district = districtSelect.value;
+      const street = streetSelect.value;
+
+      if (district && street) {
+        const address = `${district}, ${street}`;
+
+        if (window.Telegram && window.Telegram.WebApp) {
+          const webApp = Telegram.WebApp;
+          webApp.ready();
+          webApp.sendData(JSON.stringify({ address })); // Отправка адреса в Telegram
+        }
+
+        statusMessage.textContent = `Адрес сохранён: ${address}`;
+      } else {
+        statusMessage.textContent = 'Пожалуйста, выберите район и улицу.';
+      }
+    });
   </script>
 </body>
 </html>
