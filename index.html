@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Выбор адреса</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <title>Выбор адреса доставки</title>
+  <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=81d0c68b-726a-45d1-863f-27efffade502"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -24,7 +24,7 @@
       text-align: center;
     }
     #map {
-      width: 100%;
+      width: 90%;
       height: 400px;
       margin: 20px 0;
       border-radius: 10px;
@@ -80,117 +80,76 @@
   <p id="location-coordinates">Координаты: не выбраны</p>
   <p id="location-address">Адрес: не выбран</p>
 
-  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
   <script>
-    const map = L.map('map').setView([48.0159, 37.8028], 13); // Центр Донецка
-    const addressInput = document.getElementById('address-input');
-    const autocompleteSuggestions = document.getElementById('autocomplete-suggestions');
-    const locationCoordinates = document.getElementById('location-coordinates');
-    const locationAddress = document.getElementById('location-address');
-    const confirmLocationButton = document.getElementById('confirm-location');
-    const YANDEX_API_KEY = '81d0c68b-726a-45d1-863f-27efffade502'; // Ваш API-ключ
+    ymaps.ready(init);
+    let myMap, searchControl, marker;
 
-    let marker;
+    function init() {
+      myMap = new ymaps.Map("map", {
+        center: [48.0159, 37.8028], // Центр Донецка
+        zoom: 13,
+        controls: ["zoomControl"]
+      });
 
-    // Добавление слоя OpenStreetMap
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
+      // Определение текущей геолокации
+      ymaps.geolocation.get({
+        provider: "browser",
+        mapStateAutoApply: true
+      }).then(function (result) {
+        myMap.geoObjects.add(result.geoObjects);
+        const coords = result.geoObjects.position;
+        addMarker(coords[0], coords[1]);
+        reverseGeocode(coords[0], coords[1]);
+      }).catch(() => {
+        alert("Не удалось определить местоположение. Укажите адрес вручную.");
+      });
 
-    // Геолокация
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          map.setView([latitude, longitude], 15);
-          addMarker(latitude, longitude);
-          reverseGeocode(latitude, longitude);
-        },
-        (error) => {
-          console.error('Геолокация не удалась:', error.message);
-          alert('Не удалось определить местоположение. Укажите адрес вручную.');
+      // Обработка клика на карте
+      myMap.events.add("click", function (e) {
+        const coords = e.get("coords");
+        addMarker(coords[0], coords[1]);
+        reverseGeocode(coords[0], coords[1]);
+      });
+
+      // Поле поиска
+      searchControl = new ymaps.control.SearchControl({
+        options: {
+          provider: "yandex#search"
         }
-      );
+      });
+      myMap.controls.add(searchControl);
     }
 
-    // Добавление метки
-    map.on('click', function (e) {
-      const { lat, lng } = e.latlng;
-      addMarker(lat, lng);
-      reverseGeocode(lat, lng);
-    });
-
-    // Добавить метку на карту
     function addMarker(lat, lng) {
       if (marker) {
-        marker.setLatLng([lat, lng]);
+        marker.geometry.setCoordinates([lat, lng]);
       } else {
-        marker = L.marker([lat, lng], { draggable: true }).addTo(map);
-        marker.on('dragend', function (e) {
-          const { lat, lng } = e.target.getLatLng();
-          reverseGeocode(lat, lng);
+        marker = new ymaps.Placemark([lat, lng], {}, {
+          draggable: true
         });
+        marker.events.add("dragend", function (e) {
+          const coords = marker.geometry.getCoordinates();
+          reverseGeocode(coords[0], coords[1]);
+        });
+        myMap.geoObjects.add(marker);
       }
-      locationCoordinates.textContent = `Координаты: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+      document.getElementById("location-coordinates").textContent = `Координаты: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
     }
 
-    // Автодополнение через Яндекс Геокодер
-    addressInput.addEventListener('input', () => {
-      const query = addressInput.value;
-      if (!query) {
-        autocompleteSuggestions.innerHTML = '';
-        return;
-      }
-
-      fetch(`https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_API_KEY}&geocode=${encodeURIComponent(query)}&format=json`)
-        .then((response) => response.json())
-        .then((data) => {
-          const suggestions = data.response.GeoObjectCollection.featureMember;
-          autocompleteSuggestions.innerHTML = suggestions
-            .map((item) => {
-              const name = item.GeoObject.metaDataProperty.GeocoderMetaData.text;
-              const coordinates = item.GeoObject.Point.pos.split(' ');
-              return `<div class="suggestion" data-lat="${coordinates[1]}" data-lon="${coordinates[0]}">${name}</div>`;
-            })
-            .join('');
-          attachSuggestionHandlers();
-        });
-    });
-
-    // Обработчик для подсказок
-    function attachSuggestionHandlers() {
-      document.querySelectorAll('.suggestion').forEach((suggestion) => {
-        suggestion.addEventListener('click', () => {
-          const lat = suggestion.getAttribute('data-lat');
-          const lon = suggestion.getAttribute('data-lon');
-          map.setView([lat, lon], 15);
-          addMarker(lat, lon);
-          reverseGeocode(lat, lon);
-          addressInput.value = suggestion.textContent;
-          autocompleteSuggestions.innerHTML = '';
-        });
+    function reverseGeocode(lat, lng) {
+      ymaps.geocode([lat, lng]).then(function (res) {
+        const address = res.geoObjects.get(0).getAddressLine();
+        document.getElementById("location-address").textContent = `Адрес: ${address}`;
       });
     }
 
-    // Обратное геокодирование
-    function reverseGeocode(lat, lng) {
-      fetch(`https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_API_KEY}&geocode=${lng},${lat}&format=json`)
-        .then((response) => response.json())
-        .then((data) => {
-          const address = data.response.GeoObjectCollection.featureMember[0].GeoObject.metaDataProperty.GeocoderMetaData.text || 'Адрес не найден';
-          locationAddress.textContent = `Адрес: ${address}`;
-        });
-    }
-
-    // Подтверждение адреса
-    confirmLocationButton.addEventListener('click', () => {
+    document.getElementById("confirm-location").addEventListener("click", function () {
       if (!marker) {
-        alert('Сначала выберите адрес.');
+        alert("Сначала выберите адрес.");
         return;
       }
-      const { lat, lng } = marker.getLatLng();
-      alert(`Адрес подтверждён. Координаты: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+      const coords = marker.geometry.getCoordinates();
+      alert(`Адрес подтверждён. Координаты: ${coords[0].toFixed(6)}, ${coords[1].toFixed(6)}`);
     });
   </script>
 </body>
