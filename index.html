@@ -74,11 +74,6 @@
       transform: scale(1.05);
     }
 
-    /* Поля поиска */
-    #confirm-container {
-      margin: 20px 0;
-    }
-
     #confirm-button {
       padding: 14px 22px;
       font-size: 18px;
@@ -94,6 +89,40 @@
       background-color: #218838;
       transform: scale(1.05);
     }
+
+    /* Скрытые секции */
+    .section {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .section.active {
+      display: block;
+      opacity: 1;
+    }
+
+    /* Карточки магазинов */
+    .shop {
+      background-color: white;
+      padding: 20px;
+      margin: 15px 0;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      text-align: left;
+    }
+
+    .shop h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      color: #007BFF;
+    }
+
+    .shop p {
+      margin: 5px 0;
+      font-size: 14px;
+      color: #555;
+    }
   </style>
 </head>
 <body>
@@ -102,8 +131,8 @@
     <img src="logo.png" alt="Логотип DonCourier" class="logo">
   </div>
 
-  <!-- Карта -->
-  <div class="container" id="address-container">
+  <!-- Выбор адреса -->
+  <div class="container section active" id="address-section">
     <h1>Выберите адрес доставки</h1>
     <h2>Введите адрес или выберите на карте</h2>
     <div id="map"></div>
@@ -111,6 +140,23 @@
       <p id="selected-address">Адрес: не выбран</p>
       <button id="confirm-button" disabled>Подтвердить адрес</button>
     </div>
+  </div>
+
+  <!-- Список магазинов -->
+  <div class="container section" id="shops-section">
+    <h1>Доступные магазины</h1>
+    <div class="shop">
+      <h3>Магазин 1</h3>
+      <p>Адрес: ул. Артёма, 12</p>
+      <p>Время работы: 9:00 - 21:00</p>
+    </div>
+    <div class="shop">
+      <h3>Магазин 2</h3>
+      <p>Адрес: ул. Университетская, 34</p>
+      <p>Время работы: 10:00 - 20:00</p>
+    </div>
+    <!-- Добавьте больше магазинов здесь -->
+    <a href="#" class="button" onclick="returnToAddress()">Вернуться к выбору адреса</a>
   </div>
 
   <script>
@@ -177,9 +223,19 @@
       const confirmButton = document.getElementById("confirm-button");
       confirmButton.disabled = false;
       confirmButton.onclick = function () {
-        alert(`Вы выбрали адрес: ${address}`);
-        // Здесь можно добавить логику перехода на следующую страницу
+        showSection('shops-section');
       };
+    }
+
+    function showSection(sectionId) {
+      document.querySelectorAll('.section').forEach(section => {
+        section.classList.remove('active');
+      });
+      document.getElementById(sectionId).classList.add('active');
+    }
+
+    function returnToAddress() {
+      showSection('address-section');
     }
   </script>
 </body>
