@@ -30,14 +30,18 @@
       border-radius: 10px;
       border: 1px solid #ccc;
     }
+    input, button {
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+      width: 80%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
     button {
       background-color: #007BFF;
       color: white;
-      padding: 12px 20px;
-      border: none;
-      border-radius: 5px;
       cursor: pointer;
-      font-size: 16px;
       transition: background-color 0.3s ease;
     }
     button:hover {
@@ -51,15 +55,22 @@
   </style>
 </head>
 <body>
-  <h1>Выберите адрес на карте</h1>
+  <h1>Выберите адрес доставки</h1>
+  <input type="text" id="address-input" placeholder="Введите адрес вручную" />
+  <button id="search-address">Найти адрес</button>
   <div id="map"></div>
   <button id="confirm-location">Подтвердить адрес</button>
   <p id="location-coordinates">Координаты: не выбраны</p>
+  <p id="location-address">Адрес: не выбран</p>
 
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
   <script>
-    // Создание карты
     const map = L.map('map').setView([48.0159, 37.8028], 13); // Центр Донецка
+    const addressInput = document.getElementById('address-input');
+    const locationCoordinates = document.getElementById('location-coordinates');
+    const locationAddress = document.getElementById('location-address');
+    const searchAddressButton = document.getElementById('search-address');
+    const confirmLocationButton = document.getElementById('confirm-location');
 
     // Добавление слоя OpenStreetMap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -69,38 +80,79 @@
 
     let marker;
 
-    // Добавление метки при клике на карту
+    // Геолокация
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          map.setView([latitude, longitude], 15);
+          addMarker(latitude, longitude);
+          reverseGeocode(latitude, longitude);
+        },
+        () => alert('Не удалось определить местоположение. Укажите адрес вручную.')
+      );
+    }
+
+    // Добавление метки
     map.on('click', function (e) {
       const { lat, lng } = e.latlng;
+      addMarker(lat, lng);
+      reverseGeocode(lat, lng);
+    });
 
-      // Если метка уже есть, обновляем её
+    // Добавить метку на карту
+    function addMarker(lat, lng) {
       if (marker) {
         marker.setLatLng([lat, lng]);
       } else {
-        // Создаём новую метку
         marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+        marker.on('dragend', function (e) {
+          const { lat, lng } = e.target.getLatLng();
+          reverseGeocode(lat, lng);
+        });
       }
+      locationCoordinates.textContent = `Координаты: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    }
 
-      // Отображение координат
-      document.getElementById('location-coordinates').textContent = `Координаты: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-    });
-
-    // Обработчик кнопки подтверждения
-    document.getElementById('confirm-location').addEventListener('click', () => {
-      if (!marker) {
-        alert('Сначала выберите точку на карте.');
+    // Поиск адреса
+    searchAddressButton.addEventListener('click', () => {
+      const address = addressInput.value;
+      if (!address) {
+        alert('Введите адрес для поиска.');
         return;
       }
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.length === 0) {
+            alert('Адрес не найден.');
+            return;
+          }
+          const { lat, lon } = data[0];
+          map.setView([lat, lon], 15);
+          addMarker(lat, lon);
+          reverseGeocode(lat, lon);
+        });
+    });
 
+    // Обратное геокодирование
+    function reverseGeocode(lat, lng) {
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+        .then((response) => response.json())
+        .then((data) => {
+          const address = data.display_name || 'Адрес не найден';
+          locationAddress.textContent = `Адрес: ${address}`;
+        });
+    }
+
+    // Подтверждение адреса
+    confirmLocationButton.addEventListener('click', () => {
+      if (!marker) {
+        alert('Сначала выберите адрес.');
+        return;
+      }
       const { lat, lng } = marker.getLatLng();
       alert(`Адрес подтверждён. Координаты: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
-
-      // Передача данных в Telegram WebApp
-      if (window.Telegram && window.Telegram.WebApp) {
-        const webApp = Telegram.WebApp;
-        webApp.ready();
-        webApp.sendData(JSON.stringify({ lat: lat.toFixed(6), lng: lng.toFixed(6) }));
-      }
     });
   </script>
 </body>
