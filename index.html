@@ -74,48 +74,25 @@
       transform: scale(1.05);
     }
 
-    /* Увеличенные поля поиска */
-    .ymaps-2-1-79-searchbox-input__input {
-      font-size: 18px !important;
-      height: 50px !important;
-      padding: 10px !important;
+    /* Поля поиска */
+    #confirm-container {
+      margin: 20px 0;
     }
 
-    .ymaps-2-1-79-searchbox-button {
-      height: 50px !important;
-      font-size: 18px !important;
+    #confirm-button {
+      padding: 14px 22px;
+      font-size: 18px;
+      color: white;
+      background-color: #28a745;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
     }
 
-    /* Секции */
-    .section {
-      display: none;
-      opacity: 0;
-      transition: opacity 0.5s ease;
-    }
-
-    .section.active {
-      display: block;
-      opacity: 1;
-    }
-
-    /* Контакты и условия */
-    .info-section {
-      text-align: left;
-      padding: 20px;
-      background-color: white;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      margin-top: 20px;
-    }
-
-    .info-section h3 {
-      color: #007BFF;
-    }
-
-    .info-section p {
-      margin: 10px 0;
-      font-size: 16px;
-      color: #555;
+    #confirm-button:hover {
+      background-color: #218838;
+      transform: scale(1.05);
     }
   </style>
 </head>
@@ -126,38 +103,19 @@
   </div>
 
   <!-- Карта -->
-  <div class="container section active" id="address-section">
+  <div class="container" id="address-container">
     <h1>Выберите адрес доставки</h1>
-    <h2>Введите адрес для быстрой доставки</h2>
+    <h2>Введите адрес или выберите на карте</h2>
     <div id="map"></div>
-  </div>
-
-  <!-- Контакты -->
-  <div class="container section" id="contacts-section">
-    <h1>Контакты</h1>
-    <div class="info-section">
-      <h3>Поддержка:</h3>
-      <p>Электронная почта: support@doncourier.com</p>
-      <p>Telegram: @doncourier_support</p>
+    <div id="confirm-container">
+      <p id="selected-address">Адрес: не выбран</p>
+      <button id="confirm-button" disabled>Подтвердить адрес</button>
     </div>
-    <a href="#" class="button" onclick="showSection('address-section')">Назад</a>
-  </div>
-
-  <!-- Условия работы -->
-  <div class="container section" id="terms-section">
-    <h1>Условия работы</h1>
-    <div class="info-section">
-      <h3>Мы работаем для вас:</h3>
-      <p>- Доставка в течение 60 минут.</p>
-      <p>- Рабочие часы: с 8:00 до 22:00.</p>
-      <p>- Оплата наличными или картой.</p>
-    </div>
-    <a href="#" class="button" onclick="showSection('address-section')">Назад</a>
   </div>
 
   <script>
     ymaps.ready(init);
-    let myMap;
+    let myMap, marker;
 
     function init() {
       myMap = new ymaps.Map("map", {
@@ -172,13 +130,56 @@
         boundedBy: [[47.8, 37.6], [48.2, 38.0]],
         strictBounds: true
       });
+
+      // Обработка выбора адреса из поиска
+      searchControl.events.add("resultselect", function (e) {
+        const index = e.get("index");
+        searchControl.getResult(index).then(function (res) {
+          const coords = res.geometry.getCoordinates();
+          const address = res.getAddressLine();
+          addMarker(coords[0], coords[1]);
+          updateAddress(address);
+        });
+      });
+
+      // Обработка клика на карте
+      myMap.events.add("click", function (e) {
+        const coords = e.get("coords");
+        addMarker(coords[0], coords[1]);
+        reverseGeocode(coords[0], coords[1]);
+      });
     }
 
-    function showSection(sectionId) {
-      document.querySelectorAll('.section').forEach(section => {
-        section.classList.remove('active');
+    function addMarker(lat, lng) {
+      if (marker) {
+        marker.geometry.setCoordinates([lat, lng]);
+      } else {
+        marker = new ymaps.Placemark([lat, lng], {}, {
+          draggable: true
+        });
+        marker.events.add("dragend", function () {
+          const coords = marker.geometry.getCoordinates();
+          reverseGeocode(coords[0], coords[1]);
+        });
+        myMap.geoObjects.add(marker);
+      }
+    }
+
+    function reverseGeocode(lat, lng) {
+      ymaps.geocode([lat, lng]).then(function (res) {
+        const address = res.geoObjects.get(0).getAddressLine();
+        updateAddress(address);
       });
-      document.getElementById(sectionId).classList.add('active');
+    }
+
+    function updateAddress(address) {
+      document.getElementById("selected-address").textContent = `Адрес: ${address}`;
+      const confirmButton = document.getElementById("confirm-button");
+      confirmButton.disabled = false;
+      confirmButton.onclick = function () {
+        alert(`Вы выбрали адрес: ${address}`);
+        // Здесь можно добавить логику перехода на следующую страницу
+      };
     }
   </script>
 </body>
