@@ -25,13 +25,13 @@
       text-align: center;
     }
 
-    label, select, button {
+    label, select, input, button {
       width: 80%;
       margin: 10px 0;
       font-size: 16px;
     }
 
-    select {
+    select, input {
       padding: 10px;
       border: 1px solid #ccc;
       border-radius: 5px;
@@ -66,7 +66,8 @@
   <p id="status-message">Выберите район и улицу для доставки:</p>
 
   <!-- Выбор района -->
-  <label for="district-select">Район:</label>
+  <label for="district-input">Район:</label>
+  <input type="text" id="district-input" placeholder="Введите или выберите район">
   <select id="district-select">
     <option value="">Выберите район</option>
     <option value="Киевский">Киевский</option>
@@ -77,7 +78,8 @@
   </select>
 
   <!-- Выбор улицы -->
-  <label for="street-select">Улица:</label>
+  <label for="street-input">Улица:</label>
+  <input type="text" id="street-input" placeholder="Введите или выберите улицу" disabled>
   <select id="street-select" disabled>
     <option value="">Сначала выберите район</option>
   </select>
@@ -85,7 +87,9 @@
   <button id="save-address-button" disabled>Сохранить адрес</button>
 
   <script>
+    const districtInput = document.getElementById('district-input');
     const districtSelect = document.getElementById('district-select');
+    const streetInput = document.getElementById('street-input');
     const streetSelect = document.getElementById('street-select');
     const saveAddressButton = document.getElementById('save-address-button');
     const statusMessage = document.getElementById('status-message');
@@ -99,15 +103,12 @@
       'Калининский': ['ул. Донецкая', 'ул. Розы Люксембург', 'ул. Комсомольская']
     };
 
-    // Обновление списка улиц при выборе района
-    districtSelect.addEventListener('change', () => {
-      const selectedDistrict = districtSelect.value;
-
-      // Очистка списка улиц
+    // Обновление улиц при выборе района
+    function updateStreets(selectedDistrict) {
       streetSelect.innerHTML = '<option value="">Выберите улицу</option>';
+      streetInput.value = '';
 
       if (selectedDistrict && streetsByDistrict[selectedDistrict]) {
-        // Заполнение улиц для выбранного района
         streetsByDistrict[selectedDistrict].forEach(street => {
           const option = document.createElement('option');
           option.value = street;
@@ -115,16 +116,52 @@
           streetSelect.appendChild(option);
         });
         streetSelect.disabled = false;
+        streetInput.disabled = false;
       } else {
         streetSelect.disabled = true;
+        streetInput.disabled = true;
       }
-
       saveAddressButton.disabled = true;
+    }
+
+    // Выбор района из списка
+    districtSelect.addEventListener('change', () => {
+      const selectedDistrict = districtSelect.value;
+      districtInput.value = selectedDistrict;
+      updateStreets(selectedDistrict);
     });
 
-    // Активация кнопки сохранения при выборе улицы
+    // Ручной ввод района
+    districtInput.addEventListener('input', () => {
+      const value = districtInput.value;
+      const matchingDistrict = Object.keys(streetsByDistrict).find(district =>
+        district.toLowerCase().includes(value.toLowerCase())
+      );
+      districtSelect.value = matchingDistrict || '';
+      updateStreets(matchingDistrict);
+    });
+
+    // Выбор улицы из списка
     streetSelect.addEventListener('change', () => {
-      saveAddressButton.disabled = !streetSelect.value;
+      const selectedStreet = streetSelect.value;
+      streetInput.value = selectedStreet;
+      saveAddressButton.disabled = !selectedStreet;
+    });
+
+    // Ручной ввод улицы
+    streetInput.addEventListener('input', () => {
+      const value = streetInput.value;
+      const selectedDistrict = districtSelect.value;
+
+      if (selectedDistrict && streetsByDistrict[selectedDistrict]) {
+        const matchingStreet = streetsByDistrict[selectedDistrict].find(street =>
+          street.toLowerCase().includes(value.toLowerCase())
+        );
+        streetSelect.value = matchingStreet || '';
+        saveAddressButton.disabled = !matchingStreet;
+      } else {
+        saveAddressButton.disabled = true;
+      }
     });
 
     // Сохранение адреса и отправка данных в Telegram
