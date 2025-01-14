@@ -19,9 +19,8 @@
     }
     h1 {
       color: #333;
-      margin-top: 20px;
+      margin: 20px 0;
       font-size: 24px;
-      text-align: center;
     }
     #map {
       width: 90%;
@@ -30,30 +29,39 @@
       border-radius: 10px;
       border: 1px solid #ccc;
     }
-    button {
+    input, button {
       padding: 10px;
       margin: 10px 0;
       font-size: 16px;
       width: 80%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
       background-color: #007BFF;
       color: white;
-      border: none;
-      border-radius: 5px;
       cursor: pointer;
+      transition: background-color 0.3s ease;
     }
     button:hover {
       background-color: #0056b3;
     }
-    p {
-      margin: 10px 0;
-      font-size: 14px;
+    #manual-address-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
     }
   </style>
 </head>
 <body>
   <h1>Выберите адрес доставки</h1>
   <div id="map"></div>
-  <button id="confirm-location">Подтвердить адрес</button>
+  <button id="manual-address-button">Ручной ввод адреса</button>
+  <div id="manual-address-container">
+    <input type="text" id="manual-address-input" placeholder="Введите адрес вручную" />
+    <button id="submit-manual-address">Подтвердить адрес</button>
+  </div>
+  <button id="confirm-location">Подтвердить адрес на карте</button>
   <p id="location-coordinates">Координаты: не выбраны</p>
   <p id="location-address">Адрес: не выбран</p>
 
@@ -113,6 +121,36 @@
       });
     }
 
+    // Ручной ввод адреса
+    const manualAddressButton = document.getElementById("manual-address-button");
+    const manualAddressContainer = document.getElementById("manual-address-container");
+    const manualAddressInput = document.getElementById("manual-address-input");
+    const submitManualAddress = document.getElementById("submit-manual-address");
+
+    manualAddressButton.addEventListener("click", () => {
+      manualAddressContainer.style.display = "flex";
+    });
+
+    submitManualAddress.addEventListener("click", () => {
+      const manualAddress = manualAddressInput.value;
+      if (!manualAddress) {
+        alert("Введите адрес вручную.");
+        return;
+      }
+
+      // Используем геокодирование для получения координат введённого адреса
+      ymaps.geocode(manualAddress).then(function (res) {
+        const firstGeoObject = res.geoObjects.get(0);
+        const coords = firstGeoObject.geometry.getCoordinates();
+        addMarker(coords[0], coords[1]);
+        document.getElementById("location-address").textContent = `Адрес: ${firstGeoObject.getAddressLine()}`;
+        manualAddressContainer.style.display = "none"; // Скрыть ручной ввод
+      }).catch(() => {
+        alert("Не удалось найти адрес. Попробуйте ещё раз.");
+      });
+    });
+
+    // Подтверждение адреса на карте
     document.getElementById("confirm-location").addEventListener("click", function () {
       if (!marker) {
         alert("Сначала выберите адрес.");
