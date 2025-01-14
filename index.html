@@ -29,39 +29,15 @@
       border-radius: 10px;
       border: 1px solid #ccc;
     }
-    input, button {
-      padding: 10px;
+    p {
       margin: 10px 0;
-      font-size: 16px;
-      width: 80%;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    button {
-      background-color: #007BFF;
-      color: white;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    #manual-address-container {
-      display: none;
-      flex-direction: column;
-      align-items: center;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
   <h1>Выберите адрес доставки</h1>
   <div id="map"></div>
-  <button id="manual-address-button">Ручной ввод адреса</button>
-  <div id="manual-address-container">
-    <input type="text" id="manual-address-input" placeholder="Введите адрес вручную" />
-    <button id="submit-manual-address">Подтвердить адрес</button>
-  </div>
-  <button id="confirm-location">Подтвердить адрес на карте</button>
   <p id="location-coordinates">Координаты: не выбраны</p>
   <p id="location-address">Адрес: не выбран</p>
 
@@ -77,7 +53,26 @@
         controls: ["zoomControl", "searchControl"]
       });
 
-      // Определение геолокации
+      // Настройка поиска только по Донецку
+      const searchControl = myMap.controls.get("searchControl");
+      searchControl.options.set({
+        provider: "yandex#map",
+        boundedBy: [[47.8, 37.6], [48.2, 38.0]], // Ограничение поиска в пределах Донецка
+        strictBounds: true // Жёсткие границы поиска
+      });
+
+      // Событие: выбор адреса из поиска
+      searchControl.events.add("resultselect", function (e) {
+        const index = e.get("index");
+        searchControl.getResult(index).then(function (res) {
+          const coords = res.geometry.getCoordinates();
+          const address = res.getAddressLine();
+          addMarker(coords[0], coords[1]);
+          confirmAddress(address);
+        });
+      });
+
+      // Определение текущей геолокации
       ymaps.geolocation.get({
         provider: "browser",
         mapStateAutoApply: true
@@ -87,7 +82,7 @@
         addMarker(coords[0], coords[1]);
         reverseGeocode(coords[0], coords[1]);
       }).catch(() => {
-        alert("Не удалось определить местоположение. Укажите адрес вручную.");
+        alert("Не удалось определить местоположение. Укажите адрес вручную через поиск.");
       });
 
       // Обработка клика на карте
@@ -121,44 +116,14 @@
       });
     }
 
-    // Ручной ввод адреса
-    const manualAddressButton = document.getElementById("manual-address-button");
-    const manualAddressContainer = document.getElementById("manual-address-container");
-    const manualAddressInput = document.getElementById("manual-address-input");
-    const submitManualAddress = document.getElementById("submit-manual-address");
-
-    manualAddressButton.addEventListener("click", () => {
-      manualAddressContainer.style.display = "flex";
-    });
-
-    submitManualAddress.addEventListener("click", () => {
-      const manualAddress = manualAddressInput.value;
-      if (!manualAddress) {
-        alert("Введите адрес вручную.");
-        return;
+    function confirmAddress(address) {
+      const isCorrect = confirm(`Правильный ли вы указали адрес?\n\n${address}`);
+      if (isCorrect) {
+        alert(`Адрес подтверждён: ${address}`);
+      } else {
+        alert("Попробуйте снова выбрать адрес.");
       }
-
-      // Используем геокодирование для получения координат введённого адреса
-      ymaps.geocode(manualAddress).then(function (res) {
-        const firstGeoObject = res.geoObjects.get(0);
-        const coords = firstGeoObject.geometry.getCoordinates();
-        addMarker(coords[0], coords[1]);
-        document.getElementById("location-address").textContent = `Адрес: ${firstGeoObject.getAddressLine()}`;
-        manualAddressContainer.style.display = "none"; // Скрыть ручной ввод
-      }).catch(() => {
-        alert("Не удалось найти адрес. Попробуйте ещё раз.");
-      });
-    });
-
-    // Подтверждение адреса на карте
-    document.getElementById("confirm-location").addEventListener("click", function () {
-      if (!marker) {
-        alert("Сначала выберите адрес.");
-        return;
-      }
-      const coords = marker.geometry.getCoordinates();
-      alert(`Адрес подтверждён. Координаты: ${coords[0].toFixed(6)}, ${coords[1].toFixed(6)}`);
-    });
+    }
   </script>
 </body>
 </html>
