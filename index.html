@@ -5,13 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Магазин</title>
     <script>
-        let tg; // Инициализируем переменную для WebApp API
+        let tg; // Объявляем переменную для WebApp API
 
+        // Функция для инициализации Telegram WebApp API
         window.onload = () => {
-            tg = window.Telegram.WebApp; // Привязываем WebApp API к переменной
-            tg.ready(); // Уведомляем Telegram, что WebApp готов к работе
+            if (window.Telegram && window.Telegram.WebApp) {
+                tg = window.Telegram.WebApp; // Инициализируем API
+                tg.ready(); // Сообщаем Telegram, что WebApp готов
+            } else {
+                alert("Telegram WebApp API не доступен! Проверьте подключение через Telegram.");
+            }
         };
 
+        // Функция отправки данных в бота
         function sendOrder() {
             if (!tg) {
                 alert("Ошибка: Telegram API не готово!");
