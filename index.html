@@ -30,7 +30,7 @@
       border-radius: 10px;
       border: 1px solid #ccc;
     }
-    input, button {
+    input, select, button {
       padding: 10px;
       margin: 10px 0;
       font-size: 16px;
@@ -47,23 +47,6 @@
     button:hover {
       background-color: #0056b3;
     }
-    #autocomplete-suggestions {
-      position: absolute;
-      background-color: white;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      width: 80%;
-      max-height: 150px;
-      overflow-y: auto;
-      z-index: 1000;
-    }
-    .suggestion {
-      padding: 10px;
-      cursor: pointer;
-    }
-    .suggestion:hover {
-      background-color: #f0f0f0;
-    }
     #status-message {
       margin-top: 10px;
       color: green;
@@ -73,8 +56,15 @@
 </head>
 <body>
   <h1>Выберите адрес доставки</h1>
-  <input type="text" id="address-input" placeholder="Введите район, улицу или дом" />
-  <div id="autocomplete-suggestions"></div>
+  <select id="district-select">
+    <option value="">Выберите район</option>
+    <option value="Ворошиловский">Ворошиловский</option>
+    <option value="Киевский">Киевский</option>
+    <option value="Куйбышевский">Куйбышевский</option>
+    <option value="Калининский">Калининский</option>
+  </select>
+  <input type="text" id="street-input" placeholder="Введите улицу" disabled />
+  <input type="text" id="house-input" placeholder="Введите номер дома" disabled />
   <div id="map"></div>
   <button id="confirm-location">Подтвердить адрес</button>
   <p id="location-coordinates">Координаты: не выбраны</p>
@@ -83,19 +73,19 @@
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
   <script>
     const map = L.map('map').setView([48.0159, 37.8028], 13); // Центр Донецка
-    const addressInput = document.getElementById('address-input');
-    const autocompleteSuggestions = document.getElementById('autocomplete-suggestions');
+    const districtSelect = document.getElementById('district-select');
+    const streetInput = document.getElementById('street-input');
+    const houseInput = document.getElementById('house-input');
     const locationCoordinates = document.getElementById('location-coordinates');
     const locationAddress = document.getElementById('location-address');
     const confirmLocationButton = document.getElementById('confirm-location');
+    let marker;
 
     // Добавление слоя OpenStreetMap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
-
-    let marker;
 
     // Геолокация
     if ('geolocation' in navigator) {
@@ -134,43 +124,23 @@
       locationCoordinates.textContent = `Координаты: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
     }
 
-    // Поиск адреса
-    addressInput.addEventListener('input', () => {
-      const query = addressInput.value;
-      if (!query) {
-        autocompleteSuggestions.innerHTML = '';
-        return;
+    // Обновление полей ввода
+    districtSelect.addEventListener('change', () => {
+      if (districtSelect.value) {
+        streetInput.disabled = false;
+      } else {
+        streetInput.disabled = true;
+        houseInput.disabled = true;
       }
-
-      fetch(`https://nominatim.openstreetmap.org/search?format=json&city=Донецк&q=${encodeURIComponent(query)}`)
-        .then((response) => response.json())
-        .then((data) => {
-          autocompleteSuggestions.innerHTML = data
-            .map(
-              (item) =>
-                `<div class="suggestion" data-lat="${item.lat}" data-lon="${item.lon}">
-                  ${item.display_name}
-                </div>`
-            )
-            .join('');
-          attachSuggestionHandlers();
-        });
     });
 
-    // Обработчик для выбора подсказки
-    function attachSuggestionHandlers() {
-      document.querySelectorAll('.suggestion').forEach((suggestion) => {
-        suggestion.addEventListener('click', () => {
-          const lat = suggestion.getAttribute('data-lat');
-          const lon = suggestion.getAttribute('data-lon');
-          map.setView([lat, lon], 15);
-          addMarker(lat, lon);
-          reverseGeocode(lat, lon);
-          autocompleteSuggestions.innerHTML = '';
-          addressInput.value = suggestion.textContent;
-        });
-      });
-    }
+    streetInput.addEventListener('input', () => {
+      if (streetInput.value) {
+        houseInput.disabled = false;
+      } else {
+        houseInput.disabled = true;
+      }
+    });
 
     // Обратное геокодирование
     function reverseGeocode(lat, lng) {
@@ -184,12 +154,19 @@
 
     // Подтверждение адреса
     confirmLocationButton.addEventListener('click', () => {
+      const district = districtSelect.value;
+      const street = streetInput.value;
+      const house = houseInput.value;
+      if (!district || !street || !house) {
+        alert('Пожалуйста, заполните все поля.');
+        return;
+      }
       if (!marker) {
-        alert('Сначала выберите адрес.');
+        alert('Пожалуйста, укажите местоположение на карте.');
         return;
       }
       const { lat, lng } = marker.getLatLng();
-      alert(`Адрес подтверждён. Координаты: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+      alert(`Адрес подтверждён: ${district}, ${street}, д. ${house}.\nКоординаты: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
     });
   </script>
 </body>
