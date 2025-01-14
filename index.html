@@ -3,46 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Магазин</title>
+    <title>WebApp Test</title>
     <script>
-        let tg; // Объявляем переменную для WebApp API
-
-        // Функция для инициализации Telegram WebApp API
         window.onload = () => {
-            try {
-                if (window.Telegram && window.Telegram.WebApp) {
-                    tg = window.Telegram.WebApp; // Инициализируем API
-                    tg.ready(); // Сообщаем Telegram, что WebApp готов
-                    alert("Telegram WebApp API успешно инициализирован!"); // Для тестирования
-                    console.log("Telegram WebApp API успешно инициализирован!");
-                } else {
-                    alert("Telegram WebApp API не доступен. Убедитесь, что WebApp открыт через Telegram.");
-                    console.error("Telegram WebApp API отсутствует!");
-                }
-            } catch (e) {
-                console.error("Ошибка инициализации Telegram WebApp API:", e);
+            if (window.Telegram && window.Telegram.WebApp) {
+                const tg = window.Telegram.WebApp;
+                tg.ready();
+                alert("Telegram WebApp API работает!");
+            } else {
+                alert("Ошибка: Telegram WebApp API не доступен. Проверьте настройки.");
             }
         };
-
-        // Функция отправки данных в бота
-        function sendOrder() {
-            if (!tg) {
-                alert("Ошибка: Telegram API не готово!");
-                return;
-            }
-
-            const orderData = { 
-                item: "Пицца", 
-                quantity: 1 
-            };
-            tg.sendData(JSON.stringify(orderData)); // Отправляем данные боту
-            tg.close(); // Закрываем WebApp после отправки
-        }
     </script>
 </head>
 <body>
-    <h1>Добро пожаловать в магазин!</h1>
-    <p>Выберите товар и нажмите кнопку, чтобы заказать.</p>
-    <button onclick="sendOrder()">Заказать пиццу</button>
+    <h1>Добро пожаловать!</h1>
 </body>
 </html>
