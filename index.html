@@ -9,11 +9,17 @@
 
         // Функция для инициализации Telegram WebApp API
         window.onload = () => {
-            if (window.Telegram && window.Telegram.WebApp) {
-                tg = window.Telegram.WebApp; // Инициализируем API
-                tg.ready(); // Сообщаем Telegram, что WebApp готов
-            } else {
-                alert("Telegram WebApp API не доступен! Проверьте подключение через Telegram.");
+            try {
+                if (window.Telegram && window.Telegram.WebApp) {
+                    tg = window.Telegram.WebApp; // Инициализируем API
+                    tg.ready(); // Сообщаем Telegram, что WebApp готов
+                    console.log("Telegram WebApp API инициализирован!"); // Отладочная информация
+                } else {
+                    alert("Telegram WebApp API не доступен! Проверьте подключение через Telegram.");
+                    console.error("Telegram WebApp API отсутствует!");
+                }
+            } catch (e) {
+                console.error("Ошибка инициализации Telegram WebApp API:", e);
             }
         };
 
