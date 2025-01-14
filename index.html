@@ -30,7 +30,7 @@
       border-radius: 10px;
       border: 1px solid #ccc;
     }
-    input, select, button {
+    input, button {
       padding: 10px;
       margin: 10px 0;
       font-size: 16px;
@@ -47,6 +47,23 @@
     button:hover {
       background-color: #0056b3;
     }
+    #autocomplete-suggestions {
+      position: absolute;
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      width: 80%;
+      max-height: 150px;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+    .suggestion {
+      padding: 10px;
+      cursor: pointer;
+    }
+    .suggestion:hover {
+      background-color: #f0f0f0;
+    }
     #status-message {
       margin-top: 10px;
       color: green;
@@ -56,15 +73,8 @@
 </head>
 <body>
   <h1>Выберите адрес доставки</h1>
-  <select id="district-select">
-    <option value="">Выберите район</option>
-    <option value="Ворошиловский">Ворошиловский</option>
-    <option value="Киевский">Киевский</option>
-    <option value="Куйбышевский">Куйбышевский</option>
-    <option value="Калининский">Калининский</option>
-  </select>
-  <input type="text" id="street-input" placeholder="Введите улицу" disabled />
-  <input type="text" id="house-input" placeholder="Введите номер дома" disabled />
+  <input type="text" id="address-input" placeholder="Введите адрес" autocomplete="off" />
+  <div id="autocomplete-suggestions"></div>
   <div id="map"></div>
   <button id="confirm-location">Подтвердить адрес</button>
   <p id="location-coordinates">Координаты: не выбраны</p>
@@ -73,12 +83,13 @@
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
   <script>
     const map = L.map('map').setView([48.0159, 37.8028], 13); // Центр Донецка
-    const districtSelect = document.getElementById('district-select');
-    const streetInput = document.getElementById('street-input');
-    const houseInput = document.getElementById('house-input');
+    const addressInput = document.getElementById('address-input');
+    const autocompleteSuggestions = document.getElementById('autocomplete-suggestions');
     const locationCoordinates = document.getElementById('location-coordinates');
     const locationAddress = document.getElementById('location-address');
     const confirmLocationButton = document.getElementById('confirm-location');
+    const YANDEX_API_KEY = '81d0c68b-726a-45d1-863f-27efffade502'; // Вставьте ваш API-ключ Яндекс Геокодера
+
     let marker;
 
     // Добавление слоя OpenStreetMap
@@ -124,49 +135,62 @@
       locationCoordinates.textContent = `Координаты: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
     }
 
-    // Обновление полей ввода
-    districtSelect.addEventListener('change', () => {
-      if (districtSelect.value) {
-        streetInput.disabled = false;
-      } else {
-        streetInput.disabled = true;
-        houseInput.disabled = true;
+    // Автодополнение через Яндекс Геокодер
+    addressInput.addEventListener('input', () => {
+      const query = addressInput.value;
+      if (!query) {
+        autocompleteSuggestions.innerHTML = '';
+        return;
       }
+
+      fetch(`https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_API_KEY}&geocode=${encodeURIComponent(query)}&format=json`)
+        .then((response) => response.json())
+        .then((data) => {
+          const suggestions = data.response.GeoObjectCollection.featureMember;
+          autocompleteSuggestions.innerHTML = suggestions
+            .map((item) => {
+              const name = item.GeoObject.metaDataProperty.GeocoderMetaData.text;
+              const coordinates = item.GeoObject.Point.pos.split(' ');
+              return `<div class="suggestion" data-lat="${coordinates[1]}" data-lon="${coordinates[0]}">${name}</div>`;
+            })
+            .join('');
+          attachSuggestionHandlers();
+        });
     });
 
-    streetInput.addEventListener('input', () => {
-      if (streetInput.value) {
-        houseInput.disabled = false;
-      } else {
-        houseInput.disabled = true;
-      }
-    });
+    // Обработчик для подсказок
+    function attachSuggestionHandlers() {
+      document.querySelectorAll('.suggestion').forEach((suggestion) => {
+        suggestion.addEventListener('click', () => {
+          const lat = suggestion.getAttribute('data-lat');
+          const lon = suggestion.getAttribute('data-lon');
+          map.setView([lat, lon], 15);
+          addMarker(lat, lon);
+          reverseGeocode(lat, lon);
+          addressInput.value = suggestion.textContent;
+          autocompleteSuggestions.innerHTML = '';
+        });
+      });
+    }
 
     // Обратное геокодирование
     function reverseGeocode(lat, lng) {
-      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+      fetch(`https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_API_KEY}&geocode=${lng},${lat}&format=json`)
         .then((response) => response.json())
         .then((data) => {
-          const address = data.display_name || 'Адрес не найден';
+          const address = data.response.GeoObjectCollection.featureMember[0].GeoObject.metaDataProperty.GeocoderMetaData.text || 'Адрес не найден';
           locationAddress.textContent = `Адрес: ${address}`;
         });
     }
 
     // Подтверждение адреса
     confirmLocationButton.addEventListener('click', () => {
-      const district = districtSelect.value;
-      const street = streetInput.value;
-      const house = houseInput.value;
-      if (!district || !street || !house) {
-        alert('Пожалуйста, заполните все поля.');
-        return;
-      }
       if (!marker) {
-        alert('Пожалуйста, укажите местоположение на карте.');
+        alert('Сначала выберите адрес.');
         return;
       }
       const { lat, lng } = marker.getLatLng();
-      alert(`Адрес подтверждён: ${district}, ${street}, д. ${house}.\nКоординаты: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+      alert(`Адрес подтверждён. Координаты: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
     });
   </script>
 </body>
