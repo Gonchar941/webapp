@@ -10,17 +10,21 @@
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
+      background-color: #f9f9f9;
+      min-height: 100vh;
+    }
+    .container {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background-color: #f9f9f9;
-      min-height: 100vh;
+      padding: 20px;
     }
     h1 {
       color: #333;
       margin: 20px 0;
       font-size: 24px;
+      text-align: center;
     }
     #map {
       width: 90%;
@@ -29,24 +33,72 @@
       border-radius: 10px;
       border: 1px solid #ccc;
     }
-    p {
+    button {
+      padding: 10px;
       margin: 10px 0;
-      font-size: 14px;
+      font-size: 16px;
+      width: 80%;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      display: none;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .shop {
+      background-color: white;
+      padding: 15px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      width: 90%;
+    }
+    .shop h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      color: #007BFF;
+    }
+    .shop p {
+      margin: 5px 0;
+      color: #666;
+    }
+    #shops-container {
+      display: none;
     }
   </style>
 </head>
 <body>
-  <h1>Выберите адрес доставки</h1>
-  <div id="map"></div>
-  <p id="location-coordinates">Координаты: не выбраны</p>
-  <p id="location-address">Адрес: не выбран</p>
+  <div class="container" id="address-container">
+    <h1>Выберите адрес доставки</h1>
+    <div id="map"></div>
+    <p id="location-coordinates">Координаты: не выбраны</p>
+    <p id="location-address">Адрес: не выбран</p>
+  </div>
+
+  <div class="container" id="shops-container">
+    <h1>Доступные магазины</h1>
+    <div class="shop">
+      <h2>Магазин 1</h2>
+      <p>Адрес: ул. Артёма, 12</p>
+      <p>Время работы: 9:00 - 21:00</p>
+    </div>
+    <div class="shop">
+      <h2>Магазин 2</h2>
+      <p>Адрес: ул. Университетская, 34</p>
+      <p>Время работы: 10:00 - 20:00</p>
+    </div>
+    <!-- Добавьте больше магазинов по мере необходимости -->
+  </div>
 
   <script>
     ymaps.ready(init);
     let myMap, marker;
 
     function init() {
-      // Инициализация карты
       myMap = new ymaps.Map("map", {
         center: [48.0159, 37.8028], // Центр Донецка
         zoom: 13,
@@ -119,10 +171,15 @@
     function confirmAddress(address) {
       const isCorrect = confirm(`Правильный ли вы указали адрес?\n\n${address}`);
       if (isCorrect) {
-        alert(`Адрес подтверждён: ${address}`);
+        showShops();
       } else {
         alert("Попробуйте снова выбрать адрес.");
       }
+    }
+
+    function showShops() {
+      document.getElementById("address-container").style.display = "none";
+      document.getElementById("shops-container").style.display = "flex";
     }
   </script>
 </body>
