@@ -47,6 +47,23 @@
     button:hover {
       background-color: #0056b3;
     }
+    #autocomplete-suggestions {
+      position: absolute;
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      width: 80%;
+      max-height: 150px;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+    .suggestion {
+      padding: 10px;
+      cursor: pointer;
+    }
+    .suggestion:hover {
+      background-color: #f0f0f0;
+    }
     #status-message {
       margin-top: 10px;
       color: green;
@@ -56,8 +73,8 @@
 </head>
 <body>
   <h1>Выберите адрес доставки</h1>
-  <input type="text" id="address-input" placeholder="Введите адрес вручную" />
-  <button id="search-address">Найти адрес</button>
+  <input type="text" id="address-input" placeholder="Введите район, улицу или дом" />
+  <div id="autocomplete-suggestions"></div>
   <div id="map"></div>
   <button id="confirm-location">Подтвердить адрес</button>
   <p id="location-coordinates">Координаты: не выбраны</p>
@@ -67,9 +84,9 @@
   <script>
     const map = L.map('map').setView([48.0159, 37.8028], 13); // Центр Донецка
     const addressInput = document.getElementById('address-input');
+    const autocompleteSuggestions = document.getElementById('autocomplete-suggestions');
     const locationCoordinates = document.getElementById('location-coordinates');
     const locationAddress = document.getElementById('location-address');
-    const searchAddressButton = document.getElementById('search-address');
     const confirmLocationButton = document.getElementById('confirm-location');
 
     // Добавление слоя OpenStreetMap
@@ -89,7 +106,10 @@
           addMarker(latitude, longitude);
           reverseGeocode(latitude, longitude);
         },
-        () => alert('Не удалось определить местоположение. Укажите адрес вручную.')
+        (error) => {
+          console.error('Геолокация не удалась:', error.message);
+          alert('Не удалось определить местоположение. Укажите адрес вручную.');
+        }
       );
     }
 
@@ -115,25 +135,42 @@
     }
 
     // Поиск адреса
-    searchAddressButton.addEventListener('click', () => {
-      const address = addressInput.value;
-      if (!address) {
-        alert('Введите адрес для поиска.');
+    addressInput.addEventListener('input', () => {
+      const query = addressInput.value;
+      if (!query) {
+        autocompleteSuggestions.innerHTML = '';
         return;
       }
-      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`)
+
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&city=Донецк&q=${encodeURIComponent(query)}`)
         .then((response) => response.json())
         .then((data) => {
-          if (data.length === 0) {
-            alert('Адрес не найден.');
-            return;
-          }
-          const { lat, lon } = data[0];
+          autocompleteSuggestions.innerHTML = data
+            .map(
+              (item) =>
+                `<div class="suggestion" data-lat="${item.lat}" data-lon="${item.lon}">
+                  ${item.display_name}
+                </div>`
+            )
+            .join('');
+          attachSuggestionHandlers();
+        });
+    });
+
+    // Обработчик для выбора подсказки
+    function attachSuggestionHandlers() {
+      document.querySelectorAll('.suggestion').forEach((suggestion) => {
+        suggestion.addEventListener('click', () => {
+          const lat = suggestion.getAttribute('data-lat');
+          const lon = suggestion.getAttribute('data-lon');
           map.setView([lat, lon], 15);
           addMarker(lat, lon);
           reverseGeocode(lat, lon);
+          autocompleteSuggestions.innerHTML = '';
+          addressInput.value = suggestion.textContent;
         });
-    });
+      });
+    }
 
     // Обратное геокодирование
     function reverseGeocode(lat, lng) {
