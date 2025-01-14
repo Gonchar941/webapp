@@ -63,6 +63,16 @@
     }
 
     /* Карточки магазинов */
+    .shops-list {
+      max-height: 400px; /* Ограничение по высоте */
+      overflow-y: auto; /* Добавление прокрутки */
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background-color: white;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
     .shop {
       background-color: white;
       padding: 20px;
@@ -90,16 +100,6 @@
       width: 150px;
       height: auto;
     }
-
-    /* Увеличенные размеры поиска */
-    .ymaps-2-1-79-searchbox-input__input {
-      font-size: 16px !important;
-      height: 40px !important;
-    }
-    .ymaps-2-1-79-searchbox-button {
-      height: 45px !important;
-      font-size: 16px !important;
-    }
   </style>
 </head>
 <body>
@@ -114,17 +114,24 @@
   <!-- Контейнер с магазинами -->
   <div class="container" id="shops-container" style="display: none;">
     <h1>Доступные магазины</h1>
-    <div class="shop">
-      <h3>Магазин 1</h3>
-      <p>Адрес: ул. Артёма, 12</p>
-      <p>Время работы: 9:00 - 21:00</p>
+    <div class="shops-list">
+      <div class="shop">
+        <h3>Магазин 1</h3>
+        <p>Адрес: ул. Артёма, 12</p>
+        <p>Время работы: 9:00 - 21:00</p>
+      </div>
+      <div class="shop">
+        <h3>Магазин 2</h3>
+        <p>Адрес: ул. Университетская, 34</p>
+        <p>Время работы: 10:00 - 20:00</p>
+      </div>
+      <div class="shop">
+        <h3>Магазин 3</h3>
+        <p>Адрес: ул. Щорса, 45</p>
+        <p>Время работы: 8:00 - 22:00</p>
+      </div>
+      <!-- Добавьте больше магазинов здесь -->
     </div>
-    <div class="shop">
-      <h3>Магазин 2</h3>
-      <p>Адрес: ул. Университетская, 34</p>
-      <p>Время работы: 10:00 - 20:00</p>
-    </div>
-    <!-- Добавьте больше магазинов здесь -->
     <a href="#" class="button" onclick="returnToAddress()">Вернуться к выбору адреса</a>
   </div>
 
