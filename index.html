@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Доставка</title>
+  <title>DonCourier</title>
   <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=81d0c68b-726a-45d1-863f-27efffade502"></script>
   <style>
     /* Общие стили */
@@ -46,15 +46,15 @@
     /* Кнопки */
     .button {
       display: inline-block;
-      padding: 12px 20px;
-      font-size: 16px;
+      padding: 14px 22px;
+      font-size: 18px;
       color: white;
       background-color: #007BFF;
       border: none;
       border-radius: 5px;
       cursor: pointer;
       text-decoration: none;
-      margin: 10px 0;
+      margin: 15px 0;
       transition: background-color 0.3s ease;
     }
 
@@ -84,24 +84,28 @@
       color: #555;
     }
 
-    .logo-placeholder {
-      width: 100px;
-      height: 100px;
+    /* Логотип */
+    .logo {
       margin: 20px auto;
-      border-radius: 50%;
-      background-color: #ddd;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      color: #777;
+      width: 150px;
+      height: auto;
+    }
+
+    /* Увеличенные размеры поиска */
+    .ymaps-2-1-79-searchbox-input__input {
+      font-size: 16px !important;
+      height: 40px !important;
+    }
+    .ymaps-2-1-79-searchbox-button {
+      height: 45px !important;
+      font-size: 16px !important;
     }
   </style>
 </head>
 <body>
   <!-- Контейнер с картой -->
   <div class="container" id="address-container">
-    <div class="logo-placeholder">Логотип</div>
+    <img src="logo.png" alt="Логотип DonCourier" class="logo">
     <h1>Выберите адрес доставки</h1>
     <h2>Укажите точный адрес для быстрой доставки</h2>
     <div id="map"></div>
@@ -121,7 +125,7 @@
       <p>Время работы: 10:00 - 20:00</p>
     </div>
     <!-- Добавьте больше магазинов здесь -->
-    <a href="#" class="button">Вернуться к выбору адреса</a>
+    <a href="#" class="button" onclick="returnToAddress()">Вернуться к выбору адреса</a>
   </div>
 
   <script>
@@ -129,7 +133,6 @@
     let myMap, marker;
 
     function init() {
-      // Инициализация карты
       myMap = new ymaps.Map("map", {
         center: [48.0159, 37.8028], // Центр Донецка
         zoom: 13,
@@ -195,6 +198,11 @@
     function showShops() {
       document.getElementById("address-container").style.display = "none";
       document.getElementById("shops-container").style.display = "block";
+    }
+
+    function returnToAddress() {
+      document.getElementById("shops-container").style.display = "none";
+      document.getElementById("address-container").style.display = "block";
     }
   </script>
 </body>
