@@ -3,95 +3,125 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Выбор адреса доставки</title>
+  <title>Доставка</title>
   <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=81d0c68b-726a-45d1-863f-27efffade502"></script>
   <style>
+    /* Общие стили */
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Arial', sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #f9f9f9;
-      min-height: 100vh;
-    }
-    .container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    h1 {
+      background-color: #f4f4f9;
       color: #333;
-      margin: 20px 0;
-      font-size: 24px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
       text-align: center;
     }
+
+    h1 {
+      font-size: 28px;
+      color: #007BFF;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 22px;
+      margin-bottom: 20px;
+      color: #444;
+    }
+
+    /* Стили для карты */
     #map {
-      width: 90%;
+      width: 100%;
       height: 400px;
       margin: 20px 0;
       border-radius: 10px;
       border: 1px solid #ccc;
     }
-    button {
-      padding: 10px;
-      margin: 10px 0;
+
+    /* Кнопки */
+    .button {
+      display: inline-block;
+      padding: 12px 20px;
       font-size: 16px;
-      width: 80%;
-      background-color: #007BFF;
       color: white;
+      background-color: #007BFF;
       border: none;
       border-radius: 5px;
       cursor: pointer;
-      display: none;
+      text-decoration: none;
+      margin: 10px 0;
+      transition: background-color 0.3s ease;
     }
-    button:hover {
+
+    .button:hover {
       background-color: #0056b3;
     }
+
+    /* Карточки магазинов */
     .shop {
       background-color: white;
-      padding: 15px;
-      margin: 10px 0;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      width: 90%;
+      padding: 20px;
+      margin: 15px 0;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      text-align: left;
     }
-    .shop h2 {
+
+    .shop h3 {
       margin: 0 0 10px;
       font-size: 18px;
       color: #007BFF;
     }
+
     .shop p {
       margin: 5px 0;
-      color: #666;
+      font-size: 14px;
+      color: #555;
     }
-    #shops-container {
-      display: none;
+
+    .logo-placeholder {
+      width: 100px;
+      height: 100px;
+      margin: 20px auto;
+      border-radius: 50%;
+      background-color: #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #777;
     }
   </style>
 </head>
 <body>
+  <!-- Контейнер с картой -->
   <div class="container" id="address-container">
+    <div class="logo-placeholder">Логотип</div>
     <h1>Выберите адрес доставки</h1>
+    <h2>Укажите точный адрес для быстрой доставки</h2>
     <div id="map"></div>
-    <p id="location-coordinates">Координаты: не выбраны</p>
-    <p id="location-address">Адрес: не выбран</p>
   </div>
 
-  <div class="container" id="shops-container">
+  <!-- Контейнер с магазинами -->
+  <div class="container" id="shops-container" style="display: none;">
     <h1>Доступные магазины</h1>
     <div class="shop">
-      <h2>Магазин 1</h2>
+      <h3>Магазин 1</h3>
       <p>Адрес: ул. Артёма, 12</p>
       <p>Время работы: 9:00 - 21:00</p>
     </div>
     <div class="shop">
-      <h2>Магазин 2</h2>
+      <h3>Магазин 2</h3>
       <p>Адрес: ул. Университетская, 34</p>
       <p>Время работы: 10:00 - 20:00</p>
     </div>
-    <!-- Добавьте больше магазинов по мере необходимости -->
+    <!-- Добавьте больше магазинов здесь -->
+    <a href="#" class="button">Вернуться к выбору адреса</a>
   </div>
 
   <script>
@@ -99,6 +129,7 @@
     let myMap, marker;
 
     function init() {
+      // Инициализация карты
       myMap = new ymaps.Map("map", {
         center: [48.0159, 37.8028], // Центр Донецка
         zoom: 13,
@@ -124,19 +155,6 @@
         });
       });
 
-      // Определение текущей геолокации
-      ymaps.geolocation.get({
-        provider: "browser",
-        mapStateAutoApply: true
-      }).then(function (result) {
-        myMap.geoObjects.add(result.geoObjects);
-        const coords = result.geoObjects.position;
-        addMarker(coords[0], coords[1]);
-        reverseGeocode(coords[0], coords[1]);
-      }).catch(() => {
-        alert("Не удалось определить местоположение. Укажите адрес вручную через поиск.");
-      });
-
       // Обработка клика на карте
       myMap.events.add("click", function (e) {
         const coords = e.get("coords");
@@ -158,28 +176,25 @@
         });
         myMap.geoObjects.add(marker);
       }
-      document.getElementById("location-coordinates").textContent = `Координаты: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
     }
 
     function reverseGeocode(lat, lng) {
       ymaps.geocode([lat, lng]).then(function (res) {
         const address = res.geoObjects.get(0).getAddressLine();
-        document.getElementById("location-address").textContent = `Адрес: ${address}`;
+        confirmAddress(address);
       });
     }
 
     function confirmAddress(address) {
-      const isCorrect = confirm(`Правильный ли вы указали адрес?\n\n${address}`);
+      const isCorrect = confirm(`Вы указали следующий адрес:\n\n${address}\n\nПодтвердите, если адрес правильный.`);
       if (isCorrect) {
         showShops();
-      } else {
-        alert("Попробуйте снова выбрать адрес.");
       }
     }
 
     function showShops() {
       document.getElementById("address-container").style.display = "none";
-      document.getElementById("shops-container").style.display = "flex";
+      document.getElementById("shops-container").style.display = "block";
     }
   </script>
 </body>
