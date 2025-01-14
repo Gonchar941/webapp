@@ -1,29 +1,77 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Магазин</title>
+    <link rel="icon" href="favicon.ico">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #0088cc;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #005f99;
+        }
+    </style>
+</head>
+<body>
+    <h1>Добро пожаловать в магазин!</h1>
+    <p>Выберите товар и нажмите кнопку, чтобы заказать.</p>
+    <button id="orderButton">Заказать</button>
+
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        let tg = window.Telegram.WebApp;
+        // Проверяем доступность Telegram WebApp API
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
 
-        tg.expand(); // Развернуть приложение на весь экран
-        tg.MainButton.text = "Отправить заказ"; // Установить текст для кнопки
-        tg.MainButton.onClick(() => {
-            // Отправить данные в Telegram
-            tg.sendData(JSON.stringify({ product: "pizza", price: 500 }));
-        });
+            // Устанавливаем WebApp как готовый
+            tg.ready();
 
-        function initApp() {
-            if (!tg.initData) {
-                alert("Ошибка: Telegram WebApp API не доступен.");
-            } else {
-                document.getElementById("status").innerText = "Telegram API доступен!";
-            }
+            // Логирование для проверки состояния
+            console.log("Telegram WebApp API загружен успешно.");
+
+            // Настраиваем кнопку
+            const orderButton = document.getElementById('orderButton');
+
+            orderButton.addEventListener('click', () => {
+                try {
+                    tg.MainButton.text = "Обрабатываем заказ...";
+                    tg.MainButton.show();
+                    tg.sendData(JSON.stringify({ action: "order", item: "example_item" }));
+
+                    setTimeout(() => {
+                        tg.MainButton.text = "Заказ оформлен!";
+                        tg.MainButton.color = "#4CAF50";
+                    }, 2000);
+                } catch (error) {
+                    console.error("Ошибка при отправке данных в Telegram: ", error);
+                    alert("Произошла ошибка при обработке заказа.");
+                }
+            });
+        } else {
+            alert("Telegram WebApp API не доступен. Убедитесь, что вы открываете WebApp через Telegram.");
         }
     </script>
-</head>
-<body onload="initApp()">
-    <h1>Магазин</h1>
-    <p id="status">Проверяем доступность Telegram WebApp API...</p>
 </body>
 </html>
