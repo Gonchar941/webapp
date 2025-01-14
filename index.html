@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Выбор адреса</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -17,184 +17,89 @@
       background-color: #f9f9f9;
       min-height: 100vh;
     }
-
     h1 {
       color: #333;
       margin-top: 20px;
       font-size: 24px;
       text-align: center;
     }
-
-    label, select, button {
-      width: 80%;
-      margin: 10px 0;
-      font-size: 16px;
-    }
-
-    select {
-      padding: 10px;
+    #map {
+      width: 100%;
+      height: 400px;
+      margin: 20px 0;
+      border-radius: 10px;
       border: 1px solid #ccc;
-      border-radius: 5px;
     }
-
     button {
       background-color: #007BFF;
       color: white;
-      padding: 12px 15px;
+      padding: 12px 20px;
       border: none;
       border-radius: 5px;
       cursor: pointer;
       font-size: 16px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       transition: background-color 0.3s ease;
     }
-
     button:hover {
       background-color: #0056b3;
     }
-
     #status-message {
-      margin-top: 20px;
+      margin-top: 10px;
       color: green;
       font-size: 14px;
-      text-align: center;
     }
   </style>
 </head>
 <body>
-  <h1>Выберите адрес доставки</h1>
-  <p id="status-message">Выберите район, улицу и дом:</p>
+  <h1>Выберите адрес на карте</h1>
+  <div id="map"></div>
+  <button id="confirm-location">Подтвердить адрес</button>
+  <p id="location-coordinates">Координаты: не выбраны</p>
 
-  <!-- Выбор района -->
-  <label for="district-select">Район:</label>
-  <select id="district-select">
-    <option value="">Выберите район</option>
-  </select>
-
-  <!-- Выбор улицы -->
-  <label for="street-select">Улица:</label>
-  <select id="street-select" disabled>
-    <option value="">Сначала выберите район</option>
-  </select>
-
-  <!-- Выбор дома -->
-  <label for="house-select">Дом:</label>
-  <select id="house-select" disabled>
-    <option value="">Сначала выберите улицу</option>
-  </select>
-
-  <button id="save-address-button" disabled>Сохранить адрес</button>
-
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
   <script>
-    const districtSelect = document.getElementById('district-select');
-    const streetSelect = document.getElementById('street-select');
-    const houseSelect = document.getElementById('house-select');
-    const saveAddressButton = document.getElementById('save-address-button');
-    const statusMessage = document.getElementById('status-message');
+    // Создание карты
+    const map = L.map('map').setView([48.0159, 37.8028], 13); // Центр Донецка
 
-    // Структура данных: районы, улицы, дома
-    const addressData = {
-      'Киевский': {
-        'ул. Артёма': ['1', '2', '3'],
-        'ул. Университетская': ['4', '5', '6'],
-        'ул. Челюскинцев': ['7', '8', '9']
-      },
-      'Куйбышевский': {
-        'ул. Левобережная': ['10', '11', '12'],
-        'ул. Шахтёрская': ['13', '14', '15'],
-        'ул. Брусилова': ['16', '17', '18']
-      },
-      'Петровский': {
-        'ул. Победы': ['19', '20', '21'],
-        'ул. Фрунзе': ['22', '23', '24'],
-        'ул. Нахимова': ['25', '26', '27']
-      },
-      'Ленинский': {
-        'ул. Героев Труда': ['28', '29', '30'],
-        'ул. Кирова': ['31', '32', '33'],
-        'ул. Щорса': ['34', '35', '36']
-      },
-      'Калининский': {
-        'ул. Донецкая': ['37', '38', '39'],
-        'ул. Розы Люксембург': ['40', '41', '42'],
-        'ул. Комсомольская': ['43', '44', '45']
-      }
-    };
+    // Добавление слоя OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
 
-    // Заполнение списка районов
-    Object.keys(addressData).forEach(district => {
-      const option = document.createElement('option');
-      option.value = district;
-      option.textContent = district;
-      districtSelect.appendChild(option);
-    });
+    let marker;
 
-    // Обновление списка улиц при выборе района
-    districtSelect.addEventListener('change', () => {
-      const selectedDistrict = districtSelect.value;
-      streetSelect.innerHTML = '<option value="">Выберите улицу</option>';
-      houseSelect.innerHTML = '<option value="">Сначала выберите улицу</option>';
-      houseSelect.disabled = true;
+    // Добавление метки при клике на карту
+    map.on('click', function (e) {
+      const { lat, lng } = e.latlng;
 
-      if (selectedDistrict) {
-        const streets = Object.keys(addressData[selectedDistrict]);
-        streets.forEach(street => {
-          const option = document.createElement('option');
-          option.value = street;
-          option.textContent = street;
-          streetSelect.appendChild(option);
-        });
-        streetSelect.disabled = false;
+      // Если метка уже есть, обновляем её
+      if (marker) {
+        marker.setLatLng([lat, lng]);
       } else {
-        streetSelect.disabled = true;
+        // Создаём новую метку
+        marker = L.marker([lat, lng], { draggable: true }).addTo(map);
       }
-      saveAddressButton.disabled = true;
+
+      // Отображение координат
+      document.getElementById('location-coordinates').textContent = `Координаты: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
     });
 
-    // Обновление списка домов при выборе улицы
-    streetSelect.addEventListener('change', () => {
-      const selectedDistrict = districtSelect.value;
-      const selectedStreet = streetSelect.value;
-      houseSelect.innerHTML = '<option value="">Выберите дом</option>';
-
-      if (selectedStreet) {
-        const houses = addressData[selectedDistrict][selectedStreet];
-        houses.forEach(house => {
-          const option = document.createElement('option');
-          option.value = house;
-          option.textContent = house;
-          houseSelect.appendChild(option);
-        });
-        houseSelect.disabled = false;
-      } else {
-        houseSelect.disabled = true;
+    // Обработчик кнопки подтверждения
+    document.getElementById('confirm-location').addEventListener('click', () => {
+      if (!marker) {
+        alert('Сначала выберите точку на карте.');
+        return;
       }
-      saveAddressButton.disabled = true;
-    });
 
-    // Активация кнопки сохранения при выборе дома
-    houseSelect.addEventListener('change', () => {
-      saveAddressButton.disabled = !houseSelect.value;
-    });
+      const { lat, lng } = marker.getLatLng();
+      alert(`Адрес подтверждён. Координаты: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
 
-    // Сохранение адреса
-    saveAddressButton.addEventListener('click', () => {
-      const district = districtSelect.value;
-      const street = streetSelect.value;
-      const house = houseSelect.value;
-
-      if (district && street && house) {
-        const address = `${district}, ${street}, д. ${house}`;
-
-        if (window.Telegram && window.Telegram.WebApp) {
-          const webApp = Telegram.WebApp;
-          webApp.ready();
-          webApp.sendData(JSON.stringify({ address })); // Отправка адреса в Telegram
-        }
-
-        statusMessage.textContent = `Адрес сохранён: ${address}`;
-      } else {
-        statusMessage.textContent = 'Пожалуйста, выберите район, улицу и дом.';
+      // Передача данных в Telegram WebApp
+      if (window.Telegram && window.Telegram.WebApp) {
+        const webApp = Telegram.WebApp;
+        webApp.ready();
+        webApp.sendData(JSON.stringify({ lat: lat.toFixed(6), lng: lng.toFixed(6) }));
       }
     });
   </script>
