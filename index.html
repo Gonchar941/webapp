@@ -5,6 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Магазин</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f9;
+    }
+    h1 {
+      color: #333;
+    }
+    p {
+      color: #666;
+    }
+    button {
+      background-color: #007BFF;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #status-message {
+      margin-top: 20px;
+      color: green;
+    }
+  </style>
 </head>
 <body>
   <h1>Добро пожаловать в магазин!</h1>
@@ -16,21 +47,23 @@
     const orderButton = document.getElementById('order-button');
     const statusMessage = document.getElementById('status-message');
 
-    // Проверка на доступность Telegram Web App API
+    // Проверка на доступность Telegram WebApp API
     if (window.Telegram && window.Telegram.WebApp) {
-      // Telegram WebApp API доступен
       const webApp = window.Telegram.WebApp;
 
       // Инициализация Telegram Web App
       webApp.ready();
+
+      // Сообщение о подключении
       statusMessage.textContent = "Telegram Web App API подключен!";
 
       // Обработчик кнопки
       orderButton.addEventListener('click', () => {
         webApp.showAlert("Заказ оформлен!");
+        // Отправка данных в Telegram
+        webApp.sendData(JSON.stringify({ message: "Заказ подтверждён!" }));
       });
     } else {
-      // Telegram WebApp API недоступен (браузер или ПК)
       statusMessage.textContent = "Telegram Web App API недоступен. Запустите приложение через Telegram.";
       orderButton.addEventListener('click', () => {
         alert("Заказ оформлен, но без интеграции с Telegram!");
@@ -39,4 +72,3 @@
   </script>
 </body>
 </html>
-
