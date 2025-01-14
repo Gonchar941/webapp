@@ -1,21 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Магазин</title>
     <script>
         const tg = window.Telegram.WebApp;
 
+        // Эта функция отправляет данные о заказе в Telegram-бот
         function sendOrder() {
-            const orderData = { item: "Пицца", quantity: 1 };
-            tg.sendData(JSON.stringify(orderData)); // Отправка данных в Telegram
-            tg.close(); // Закрыть WebApp после отправки
+            const orderData = { 
+                item: "Пицца",  // Пример товара
+                quantity: 1     // Пример количества
+            };
+            tg.sendData(JSON.stringify(orderData)); // Отправляем данные боту
+            tg.close(); // Закрываем WebApp после отправки
         }
 
-        tg.ready(); // Сообщаем Telegram, что WebApp загружен
+        // Сообщаем Telegram, что WebApp готов к работе
+        tg.ready();
     </script>
 </head>
 <body>
     <h1>Добро пожаловать в магазин!</h1>
+    <p>Выберите товар и нажмите кнопку, чтобы заказать.</p>
     <button onclick="sendOrder()">Заказать пиццу</button>
 </body>
 </html>
