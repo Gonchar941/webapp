@@ -59,15 +59,33 @@
       font-size: 14px;
       text-align: center;
     }
+
+    .autocomplete-suggestions {
+      border: 1px solid #ccc;
+      max-height: 150px;
+      overflow-y: auto;
+      background-color: #fff;
+      width: 80%;
+      margin: 0 auto;
+      border-radius: 5px;
+    }
+
+    .autocomplete-suggestion {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .autocomplete-suggestion:hover {
+      background-color: #f0f0f0;
+    }
   </style>
 </head>
 <body>
   <h1>Добро пожаловать в магазин!</h1>
-  <p id="status-message">Выберите район и улицу для доставки:</p>
+  <p id="status-message">Выберите район и введите улицу для доставки:</p>
 
   <!-- Выбор района -->
-  <label for="district-input">Район:</label>
-  <input type="text" id="district-input" placeholder="Введите или выберите район">
+  <label for="district-select">Район:</label>
   <select id="district-select">
     <option value="">Выберите район</option>
     <option value="Киевский">Киевский</option>
@@ -77,22 +95,19 @@
     <option value="Калининский">Калининский</option>
   </select>
 
-  <!-- Выбор улицы -->
+  <!-- Ввод улицы -->
   <label for="street-input">Улица:</label>
-  <input type="text" id="street-input" placeholder="Введите или выберите улицу" disabled>
-  <select id="street-select" disabled>
-    <option value="">Сначала выберите район</option>
-  </select>
+  <input type="text" id="street-input" placeholder="Введите улицу" disabled>
+  <div id="autocomplete-suggestions" class="autocomplete-suggestions"></div>
 
   <button id="save-address-button" disabled>Сохранить адрес</button>
 
   <script>
-    const districtInput = document.getElementById('district-input');
     const districtSelect = document.getElementById('district-select');
     const streetInput = document.getElementById('street-input');
-    const streetSelect = document.getElementById('street-select');
     const saveAddressButton = document.getElementById('save-address-button');
     const statusMessage = document.getElementById('status-message');
+    const autocompleteSuggestions = document.getElementById('autocomplete-suggestions');
 
     // Улицы по районам
     const streetsByDistrict = {
@@ -103,71 +118,52 @@
       'Калининский': ['ул. Донецкая', 'ул. Розы Люксембург', 'ул. Комсомольская']
     };
 
-    // Обновление улиц при выборе района
-    function updateStreets(selectedDistrict) {
-      streetSelect.innerHTML = '<option value="">Выберите улицу</option>';
-      streetInput.value = '';
-
-      if (selectedDistrict && streetsByDistrict[selectedDistrict]) {
-        streetsByDistrict[selectedDistrict].forEach(street => {
-          const option = document.createElement('option');
-          option.value = street;
-          option.textContent = street;
-          streetSelect.appendChild(option);
-        });
-        streetSelect.disabled = false;
-        streetInput.disabled = false;
-      } else {
-        streetSelect.disabled = true;
-        streetInput.disabled = true;
-      }
-      saveAddressButton.disabled = true;
-    }
-
-    // Выбор района из списка
+    // Разрешить ввод улицы только после выбора района
     districtSelect.addEventListener('change', () => {
       const selectedDistrict = districtSelect.value;
-      districtInput.value = selectedDistrict;
-      updateStreets(selectedDistrict);
+      streetInput.disabled = !selectedDistrict;
+      saveAddressButton.disabled = true;
+      streetInput.value = '';
+      autocompleteSuggestions.innerHTML = '';
     });
 
-    // Ручной ввод района
-    districtInput.addEventListener('input', () => {
-      const value = districtInput.value;
-      const matchingDistrict = Object.keys(streetsByDistrict).find(district =>
-        district.toLowerCase().includes(value.toLowerCase())
-      );
-      districtSelect.value = matchingDistrict || '';
-      updateStreets(matchingDistrict);
-    });
-
-    // Выбор улицы из списка
-    streetSelect.addEventListener('change', () => {
-      const selectedStreet = streetSelect.value;
-      streetInput.value = selectedStreet;
-      saveAddressButton.disabled = !selectedStreet;
-    });
-
-    // Ручной ввод улицы
+    // Автодополнение для улиц
     streetInput.addEventListener('input', () => {
-      const value = streetInput.value;
       const selectedDistrict = districtSelect.value;
+      const inputValue = streetInput.value.toLowerCase();
 
-      if (selectedDistrict && streetsByDistrict[selectedDistrict]) {
-        const matchingStreet = streetsByDistrict[selectedDistrict].find(street =>
-          street.toLowerCase().includes(value.toLowerCase())
-        );
-        streetSelect.value = matchingStreet || '';
-        saveAddressButton.disabled = !matchingStreet;
-      } else {
-        saveAddressButton.disabled = true;
+      if (!selectedDistrict || !streetsByDistrict[selectedDistrict]) {
+        autocompleteSuggestions.innerHTML = '';
+        return;
       }
+
+      // Найти совпадения улиц
+      const matches = streetsByDistrict[selectedDistrict].filter(street =>
+        street.toLowerCase().includes(inputValue)
+      );
+
+      // Показать совпадения
+      autocompleteSuggestions.innerHTML = matches
+        .map(match => `<div class="autocomplete-suggestion">${match}</div>`)
+        .join('');
+
+      // Если есть совпадения, активировать кнопку
+      saveAddressButton.disabled = matches.length === 0;
+
+      // Обработать выбор из предложений
+      Array.from(autocompleteSuggestions.children).forEach(item => {
+        item.addEventListener('click', () => {
+          streetInput.value = item.textContent;
+          autocompleteSuggestions.innerHTML = '';
+          saveAddressButton.disabled = false;
+        });
+      });
     });
 
-    // Сохранение адреса и отправка данных в Telegram
+    // Сохранение адреса
     saveAddressButton.addEventListener('click', () => {
       const district = districtSelect.value;
-      const street = streetSelect.value;
+      const street = streetInput.value;
 
       if (district && street) {
         const address = `${district}, ${street}`;
@@ -180,7 +176,7 @@
 
         statusMessage.textContent = `Адрес сохранён: ${address}`;
       } else {
-        statusMessage.textContent = 'Пожалуйста, выберите район и улицу.';
+        statusMessage.textContent = 'Пожалуйста, выберите район и введите улицу.';
       }
     });
   </script>
