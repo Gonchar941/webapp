@@ -5,10 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Магазин</title>
     <script>
-        const tg = window.Telegram.WebApp;
+        let tg; // Инициализируем переменную для WebApp API
 
-        // Эта функция отправляет данные о заказе в Telegram-бот
+        window.onload = () => {
+            tg = window.Telegram.WebApp; // Привязываем WebApp API к переменной
+            tg.ready(); // Уведомляем Telegram, что WebApp готов к работе
+        };
+
         function sendOrder() {
+            if (!tg) {
+                alert("Ошибка: Telegram API не готово!");
+                return;
+            }
+
             const orderData = { 
                 item: "Пицца",  // Пример товара
                 quantity: 1     // Пример количества
@@ -16,9 +25,6 @@
             tg.sendData(JSON.stringify(orderData)); // Отправляем данные боту
             tg.close(); // Закрываем WebApp после отправки
         }
-
-        // Уведомляем Telegram, что WebApp готов к работе
-        tg.ready();
     </script>
 </head>
 <body>
