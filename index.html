@@ -5,10 +5,91 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Магазин</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    /* Базовые стили для всего приложения */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #f9f9f9;
+      min-height: 100vh;
+    }
+
+    h1 {
+      color: #333;
+      margin-top: 20px;
+      font-size: 24px;
+      text-align: center;
+    }
+
+    p {
+      color: #666;
+      text-align: center;
+      margin: 10px 20px;
+    }
+
+    /* Кнопка */
+    button {
+      background-color: #007BFF;
+      color: white;
+      padding: 15px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    /* Адаптивный блок сообщения */
+    #status-message {
+      margin-top: 20px;
+      color: green;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    /* Для мобильных устройств */
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 20px;
+      }
+
+      button {
+        font-size: 14px;
+        padding: 12px 15px;
+      }
+    }
+
+    /* Для очень маленьких экранов */
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 18px;
+      }
+
+      p {
+        font-size: 14px;
+      }
+
+      button {
+        font-size: 12px;
+        padding: 10px 12px;
+      }
+    }
+  </style>
 </head>
 <body>
   <h1>Добро пожаловать в магазин!</h1>
-  <p>Выберите товар и нажмите кнопку, чтобы заказать.</p>
+  <p>Выберите товар и нажмите кнопку, чтобы оформить заказ.</p>
   <button id="order-button">Заказать</button>
   <p id="status-message"></p>
 
@@ -17,17 +98,22 @@
     const statusMessage = document.getElementById('status-message');
 
     // Проверка доступности WebApp API
-    if (window.Telegram.WebApp) {
+    if (window.Telegram && window.Telegram.WebApp) {
       const webApp = Telegram.WebApp;
-      webApp.ready();
+      webApp.ready(); // Инициализация WebApp API
+
       statusMessage.textContent = "Telegram Web App API подключен!";
-      
+
+      // Обработчик нажатия на кнопку
       orderButton.addEventListener('click', () => {
-        webApp.showAlert("Заказ оформлен!");
-        webApp.sendData(JSON.stringify({ order: "Подтверждён" }));
+        webApp.showAlert("Ваш заказ оформлен!");
+        webApp.sendData(JSON.stringify({ order: "Подтверждён" })); // Отправка данных в Telegram
       });
     } else {
-      statusMessage.textContent = "Web App API недоступен.";
+      statusMessage.textContent = "Telegram Web App API недоступен.";
+      orderButton.addEventListener('click', () => {
+        alert("Ваш заказ оформлен, но без интеграции с Telegram.");
+      });
     }
   </script>
 </body>
