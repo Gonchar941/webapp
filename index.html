@@ -69,7 +69,9 @@
     }
 
     #confirm-button {
-      display: none;
+      position: relative;
+      top: -50px;
+      margin: 0 auto;
       padding: 14px 22px;
       font-size: 18px;
       color: white;
@@ -77,8 +79,8 @@
       border: none;
       border-radius: 30px;
       cursor: pointer;
+      display: block;
       transition: background-color 0.3s ease, transform 0.3s ease;
-      margin: 20px auto;
     }
 
     #confirm-button:hover {
@@ -87,13 +89,16 @@
     }
 
     .hint {
-      background-color: #ffeb3b;
-      color: #333;
+      background-color: #007BFF;
+      color: white;
       padding: 10px;
+      margin-bottom: 10px;
       text-align: center;
       border-radius: 5px;
       font-weight: bold;
       animation: fadeOut 5s forwards;
+      font-size: 16px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 
     @keyframes fadeOut {
@@ -142,12 +147,18 @@
     .section {
       display: none;
       opacity: 0;
-      transition: opacity 0.5s ease;
+      transition: opacity 0.5s ease, transform 0.3s ease;
     }
 
     .section.active {
       display: block;
       opacity: 1;
+      transform: translateY(0);
+    }
+
+    .shop-section, .cart-section, .contacts-section, .profile-section {
+      padding: 20px;
+      text-align: center;
     }
   </style>
 </head>
@@ -156,15 +167,38 @@
   <div class="hint">Разверните приложение на весь экран для удобного использования!</div>
 
   <!-- Верхний блок -->
-  <div class="header-section">
+  <div class="header-section section active" id="address-section">
     <h1>Выберите адрес доставки</h1>
     <input type="text" id="address-input" placeholder="Введите адрес">
     <button id="search-button">Найти</button>
+    <div id="map"></div>
+    <button id="confirm-button">Подтвердить адрес</button>
   </div>
 
-  <!-- Карта -->
-  <div id="map"></div>
-  <button id="confirm-button">Подтвердить адрес</button>
+  <!-- Магазины -->
+  <div class="shop-section section" id="shop-section">
+    <h1>Магазины</h1>
+    <p>Список доступных магазинов.</p>
+  </div>
+
+  <!-- Корзина -->
+  <div class="cart-section section" id="cart-section">
+    <h1>Корзина</h1>
+    <p>Здесь будут ваши товары.</p>
+  </div>
+
+  <!-- Контакты -->
+  <div class="contacts-section section" id="contacts-section">
+    <h1>Контакты</h1>
+    <p>Email: support@doncourier.com</p>
+    <p>Телефон: +380 50 123 45 67</p>
+  </div>
+
+  <!-- Профиль -->
+  <div class="profile-section section" id="profile-section">
+    <h1>Профиль</h1>
+    <p>Личная информация.</p>
+  </div>
 
   <!-- Меню -->
   <div class="menu">
@@ -176,15 +210,15 @@
       <i class="fa fa-shopping-bag"></i>
       <span>Магазин</span>
     </a>
-    <a href="#">
+    <a href="#" onclick="showSection('cart-section')">
       <i class="fa fa-shopping-cart"></i>
       <span>Корзина</span>
     </a>
-    <a href="#contacts">
+    <a href="#" onclick="showSection('contacts-section')">
       <i class="fa fa-envelope"></i>
       <span>Контакты</span>
     </a>
-    <a href="#profile">
+    <a href="#" onclick="showSection('profile-section')">
       <i class="fa fa-user"></i>
       <span>Профиль</span>
     </a>
@@ -195,39 +229,26 @@
     let myMap, marker;
 
     function init() {
-      // Инициализация карты
       myMap = new ymaps.Map("map", {
-        center: [48.0159, 37.8028], // Центр Донецка
+        center: [48.0159, 37.8028],
         zoom: 13,
         controls: ["zoomControl"]
       });
 
-      // Кнопка поиска
       document.getElementById("search-button").addEventListener("click", () => {
         const query = document.getElementById("address-input").value;
         if (query) {
-          ymaps.geocode(query, { boundedBy: [[47.8, 37.6], [48.2, 38.0]], strictBounds: true }).then(res => {
+          ymaps.geocode(query).then(res => {
             const firstGeoObject = res.geoObjects.get(0);
             if (firstGeoObject) {
               const coords = firstGeoObject.geometry.getCoordinates();
-              const address = firstGeoObject.getAddressLine();
-              myMap.setCenter(coords, 16, { duration: 500 }); // Приближение
+              myMap.setCenter(coords, 16, { duration: 500 });
               addMarker(coords[0], coords[1]);
-              updateAddress(address);
             } else {
               alert("Адрес не найден. Попробуйте другой запрос.");
             }
           });
-        } else {
-          alert("Введите адрес для поиска.");
         }
-      });
-
-      // Клик по карте
-      myMap.events.add("click", function (e) {
-        const coords = e.get("coords");
-        addMarker(coords[0], coords[1]);
-        reverseGeocode(coords[0], coords[1]);
       });
     }
 
@@ -236,28 +257,8 @@
         marker.geometry.setCoordinates([lat, lng]);
       } else {
         marker = new ymaps.Placemark([lat, lng], {}, { draggable: true });
-        marker.events.add("dragend", function () {
-          const coords = marker.geometry.getCoordinates();
-          reverseGeocode(coords[0], coords[1]);
-        });
         myMap.geoObjects.add(marker);
       }
-    }
-
-    function reverseGeocode(lat, lng) {
-      ymaps.geocode([lat, lng]).then(function (res) {
-        const address = res.geoObjects.get(0).getAddressLine();
-        updateAddress(address);
-      });
-    }
-
-    function updateAddress(address) {
-      const confirmButton = document.getElementById("confirm-button");
-      confirmButton.style.display = "block";
-      confirmButton.onclick = function () {
-        alert(`Адрес подтвержден: ${address}`);
-        showSection('shop-section');
-      };
     }
 
     function showSection(sectionId) {
