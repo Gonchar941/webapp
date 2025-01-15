@@ -110,9 +110,40 @@
     .menu span {
       font-size: 12px;
     }
+
+    /* Подсказка */
+    .hint {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background-color: rgba(0, 123, 255, 0.9);
+      color: white;
+      padding: 10px;
+      text-align: center;
+      font-size: 14px;
+      z-index: 1000;
+      animation: fadeOut 4s ease forwards;
+    }
+
+    @keyframes fadeOut {
+      0% {
+        opacity: 1;
+      }
+      80% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        display: none;
+      }
+    }
   </style>
 </head>
 <body>
+  <!-- Подсказка -->
+  <div class="hint">Для удобного использования разверните приложение на весь экран.</div>
+
   <!-- Логотип -->
   <div class="container">
     <img src="logo.png" alt="Логотип DonCourier" class="logo">
