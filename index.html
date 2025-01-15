@@ -72,19 +72,20 @@
     #confirm-button {
       display: block;
       margin: 10px auto;
-      padding: 10px 20px;
-      font-size: 16px;
+      padding: 14px 30px;
+      font-size: 18px;
       color: white;
-      background-color: #007BFF;
+      background-color: #FF5722;
       border: none;
-      border-radius: 20px;
+      border-radius: 30px;
       cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
       transition: background-color 0.3s ease, transform 0.3s ease;
     }
 
     #confirm-button:hover {
-      background-color: #0056b3;
-      transform: scale(1.05);
+      background-color: #E64A19;
+      transform: scale(1.1);
     }
 
     .hint {
@@ -142,21 +143,36 @@
       font-size: 12px;
     }
 
-    .section {
-      display: none;
-      opacity: 0;
-      transition: opacity 0.5s ease, transform 0.3s ease;
-    }
-
-    .section.active {
-      display: block;
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .shop-section, .cart-section, .contacts-section, .profile-section {
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       padding: 20px;
-      text-align: center;
+      background-color: white;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      z-index: 1000;
+      display: none;
+    }
+
+    .popup h2 {
+      color: #28a745;
+    }
+
+    .popup button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .popup button:hover {
+      background-color: #0056b3;
     }
   </style>
 </head>
@@ -173,29 +189,11 @@
     <button id="confirm-button">Подтвердить адрес</button>
   </div>
 
-  <!-- Магазины -->
-  <div class="shop-section section" id="shop-section">
-    <h1>Магазины</h1>
-    <p>Список доступных магазинов.</p>
-  </div>
-
-  <!-- Корзина -->
-  <div class="cart-section section" id="cart-section">
-    <h1>Корзина</h1>
-    <p>Здесь будут ваши товары.</p>
-  </div>
-
-  <!-- Контакты -->
-  <div class="contacts-section section" id="contacts-section">
-    <h1>Контакты</h1>
-    <p>Email: support@doncourier.com</p>
-    <p>Телефон: +380 50 123 45 67</p>
-  </div>
-
-  <!-- Профиль -->
-  <div class="profile-section section" id="profile-section">
-    <h1>Профиль</h1>
-    <p>Личная информация.</p>
+  <!-- Всплывающее окно -->
+  <div class="popup" id="popup">
+    <h2>Поздравляем!</h2>
+    <p>Ваш адрес подтвержден.</p>
+    <button onclick="closePopup()">Закрыть</button>
   </div>
 
   <!-- Меню -->
@@ -243,8 +241,7 @@
               myMap.setCenter(coords, 16, { duration: 500 });
               addMarker(coords[0], coords[1]);
               document.getElementById("confirm-button").onclick = function () {
-                alert(`Адрес подтвержден: ${firstGeoObject.getAddressLine()}`);
-                showSection('shop-section');
+                showPopup();
               };
             } else {
               alert("Адрес не найден. Попробуйте другой запрос.");
@@ -268,6 +265,15 @@
         section.classList.remove('active');
       });
       document.getElementById(sectionId).classList.add('active');
+    }
+
+    function showPopup() {
+      document.getElementById("popup").style.display = "block";
+    }
+
+    function closePopup() {
+      document.getElementById("popup").style.display = "none";
+      showSection("shop-section");
     }
   </script>
 </body>
