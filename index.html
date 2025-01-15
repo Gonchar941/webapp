@@ -33,6 +33,17 @@
       color: #0056b3;
     }
 
+    /* Подсказка */
+    .hint {
+      background-color: #007BFF;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      font-size: 14px;
+      border-bottom-left-radius: 10px;
+      border-bottom-right-radius: 10px;
+    }
+
     /* Верхний блок */
     .header-section {
       background-color: #007BFF;
@@ -54,9 +65,6 @@
       outline: none;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       background-color: #fff;
-      background-image: url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/fonts/fontawesome-webfont.woff?v=4.7.0');
-      background-position: 10px 50%;
-      background-repeat: no-repeat;
     }
 
     .header-section button {
@@ -139,27 +147,16 @@
     .menu span {
       font-size: 12px;
     }
-
-    /* Анимация кнопки */
-    .fade-in {
-      animation: fadeIn 0.5s ease-in forwards;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
-    }
   </style>
 </head>
 <body>
+  <!-- Подсказка -->
+  <div class="hint">Разверните приложение на весь экран для удобного использования.</div>
+
   <!-- Верхний блок -->
   <div class="header-section">
     <h1>Выберите адрес доставки</h1>
-    <input type="text" placeholder="Введите адрес" id="address-input">
+    <input type="text" id="address-input" placeholder="Введите адрес">
     <button id="search-button">Найти</button>
   </div>
 
@@ -199,30 +196,22 @@
       myMap = new ymaps.Map("map", {
         center: [48.0159, 37.8028],
         zoom: 13,
-        controls: ["zoomControl", "searchControl"]
+        controls: ["zoomControl"]
       });
 
-      const searchControl = myMap.controls.get("searchControl");
-      searchControl.options.set({
-        provider: "yandex#map",
-        boundedBy: [[47.8, 37.6], [48.2, 38.0]],
-        strictBounds: true
-      });
-
-      searchControl.events.add("resultselect", function (e) {
-        const index = e.get("index");
-        searchControl.getResult(index).then(function (res) {
-          const coords = res.geometry.getCoordinates();
-          const address = res.getAddressLine();
-          addMarker(coords[0], coords[1]);
-          updateAddress(address);
+      document.getElementById("search-button").addEventListener("click", () => {
+        const query = document.getElementById("address-input").value;
+        ymaps.geocode(query, { boundedBy: [[47.8, 37.6], [48.2, 38.0]], strictBounds: true }).then(res => {
+          const firstGeoObject = res.geoObjects.get(0);
+          if (firstGeoObject) {
+            const coords = firstGeoObject.geometry.getCoordinates();
+            const address = firstGeoObject.getAddressLine();
+            addMarker(coords[0], coords[1]);
+            updateAddress(address);
+          } else {
+            alert("Адрес не найден. Попробуйте другой запрос.");
+          }
         });
-      });
-
-      myMap.events.add("click", function (e) {
-        const coords = e.get("coords");
-        addMarker(coords[0], coords[1]);
-        reverseGeocode(coords[0], coords[1]);
       });
     }
 
@@ -230,9 +219,7 @@
       if (marker) {
         marker.geometry.setCoordinates([lat, lng]);
       } else {
-        marker = new ymaps.Placemark([lat, lng], {}, {
-          draggable: true
-        });
+        marker = new ymaps.Placemark([lat, lng], {}, { draggable: true });
         marker.events.add("dragend", function () {
           const coords = marker.geometry.getCoordinates();
           reverseGeocode(coords[0], coords[1]);
