@@ -55,27 +55,10 @@
       border: 1px solid #ccc;
     }
 
-    /* Кнопки */
-    .button {
-      display: inline-block;
-      padding: 14px 22px;
-      font-size: 18px;
-      color: white;
-      background-color: #007BFF;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      text-decoration: none;
-      margin: 15px 0;
-      transition: background-color 0.3s ease, transform 0.3s ease;
-    }
-
-    .button:hover {
-      background-color: #0056b3;
-      transform: scale(1.05);
-    }
-
+    /* Кнопка подтвердить */
     #confirm-button {
+      display: none;
+      margin: 20px auto;
       padding: 14px 22px;
       font-size: 18px;
       color: white;
@@ -127,18 +110,6 @@
     .menu span {
       font-size: 12px;
     }
-
-    /* Скрытые секции */
-    .section {
-      display: none;
-      opacity: 0;
-      transition: opacity 0.5s ease;
-    }
-
-    .section.active {
-      display: block;
-      opacity: 1;
-    }
   </style>
 </head>
 <body>
@@ -152,10 +123,7 @@
     <h1>Выберите адрес доставки</h1>
     <h2>Введите адрес или выберите на карте</h2>
     <div id="map"></div>
-    <div id="confirm-container">
-      <p id="selected-address">Адрес: не выбран</p>
-      <button id="confirm-button" disabled>Подтвердить адрес</button>
-    </div>
+    <button id="confirm-button">Подтвердить адрес</button>
   </div>
 
   <!-- Список магазинов -->
@@ -171,16 +139,16 @@
       <span>Адрес</span>
     </a>
     <a href="#" onclick="showSection('shops-section')">
-      <i class="fa fa-shopping-bag"></i>
-      <span>Магазины</span>
+      <i class="fa fa-shopping-cart"></i>
+      <span>Корзина</span>
     </a>
     <a href="#contacts">
       <i class="fa fa-envelope"></i>
       <span>Контакты</span>
     </a>
-    <a href="#about">
-      <i class="fa fa-info-circle"></i>
-      <span>О компании</span>
+    <a href="#profile">
+      <i class="fa fa-user"></i>
+      <span>Профиль</span>
     </a>
   </div>
 
@@ -244,7 +212,7 @@
     function updateAddress(address) {
       document.getElementById("selected-address").textContent = `Адрес: ${address}`;
       const confirmButton = document.getElementById("confirm-button");
-      confirmButton.disabled = false;
+      confirmButton.style.display = "block";
       confirmButton.onclick = function () {
         showSection('shops-section');
       };
