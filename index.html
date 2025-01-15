@@ -87,13 +87,19 @@
     }
 
     .hint {
-      background-color: #f8d7da;
-      color: #721c24;
+      background-color: #ffeb3b;
+      color: #333;
       padding: 10px;
-      margin-bottom: 10px;
       text-align: center;
-      border: 1px solid #f5c6cb;
       border-radius: 5px;
+      font-weight: bold;
+      animation: fadeOut 5s forwards;
+    }
+
+    @keyframes fadeOut {
+      0% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { opacity: 0; display: none; }
     }
 
     .menu {
@@ -116,11 +122,12 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      transition: color 0.3s ease;
+      transition: color 0.3s ease, transform 0.3s ease;
     }
 
     .menu a:hover {
       color: #ddd;
+      transform: scale(1.1);
     }
 
     .menu i {
@@ -131,11 +138,22 @@
     .menu span {
       font-size: 12px;
     }
+
+    .section {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .section.active {
+      display: block;
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
   <!-- Подсказка -->
-  <div class="hint">Пожалуйста, разверните приложение на весь экран для удобного использования!</div>
+  <div class="hint">Разверните приложение на весь экран для удобного использования!</div>
 
   <!-- Верхний блок -->
   <div class="header-section">
@@ -193,6 +211,7 @@
             if (firstGeoObject) {
               const coords = firstGeoObject.geometry.getCoordinates();
               const address = firstGeoObject.getAddressLine();
+              myMap.setCenter(coords, 16, { duration: 500 }); // Приближение
               addMarker(coords[0], coords[1]);
               updateAddress(address);
             } else {
@@ -237,7 +256,15 @@
       confirmButton.style.display = "block";
       confirmButton.onclick = function () {
         alert(`Адрес подтвержден: ${address}`);
+        showSection('shop-section');
       };
+    }
+
+    function showSection(sectionId) {
+      document.querySelectorAll('.section').forEach(section => {
+        section.classList.remove('active');
+      });
+      document.getElementById(sectionId).classList.add('active');
     }
   </script>
 </body>
