@@ -21,7 +21,6 @@
       max-width: 1200px;
       margin: 0 auto;
       padding: 20px;
-      text-align: center;
     }
 
     h1, h2 {
@@ -34,22 +33,52 @@
       color: #0056b3;
     }
 
-    /* Логотип */
-    .logo {
-      margin: 20px auto;
-      width: 150px;
-      height: auto;
-      transition: transform 0.3s ease;
+    /* Верхний блок */
+    .header-section {
+      background-color: #007BFF;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 
-    .logo:hover {
-      transform: scale(1.1);
+    .header-section input {
+      width: 70%;
+      padding: 15px 10px 15px 40px;
+      font-size: 18px;
+      border: none;
+      border-radius: 30px;
+      margin-bottom: 10px;
+      outline: none;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      background-color: #fff;
+      background-image: url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/fonts/fontawesome-webfont.woff?v=4.7.0');
+      background-position: 10px 50%;
+      background-repeat: no-repeat;
+    }
+
+    .header-section button {
+      padding: 14px 22px;
+      font-size: 18px;
+      color: white;
+      background-color: #28a745;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .header-section button:hover {
+      background-color: #218838;
+      transform: scale(1.05);
     }
 
     /* Карта */
     #map {
       width: 100%;
-      height: 300px;
+      height: 400px;
       margin: 20px 0;
       border-radius: 10px;
       border: 1px solid #ccc;
@@ -58,15 +87,15 @@
     /* Кнопка подтвердить */
     #confirm-button {
       display: none;
-      margin: 20px auto;
       padding: 14px 22px;
       font-size: 18px;
       color: white;
       background-color: #28a745;
       border: none;
-      border-radius: 5px;
+      border-radius: 30px;
       cursor: pointer;
       transition: background-color 0.3s ease, transform 0.3s ease;
+      margin: 20px auto;
     }
 
     #confirm-button:hover {
@@ -111,38 +140,32 @@
       font-size: 12px;
     }
 
-    /* Скрытые секции */
-    .section {
-      display: none;
-      opacity: 0;
-      transition: opacity 0.5s ease;
+    /* Анимация кнопки */
+    .fade-in {
+      animation: fadeIn 0.5s ease-in forwards;
     }
 
-    .section.active {
-      display: block;
-      opacity: 1;
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- Логотип -->
-  <div class="container">
-    <img src="logo.png" alt="Логотип DonCourier" class="logo">
-  </div>
-
-  <!-- Выбор адреса -->
-  <div class="container section active" id="address-section">
+  <!-- Верхний блок -->
+  <div class="header-section">
     <h1>Выберите адрес доставки</h1>
-    <h2>Введите адрес или выберите на карте</h2>
-    <div id="map"></div>
-    <button id="confirm-button">Подтвердить адрес</button>
+    <input type="text" placeholder="Введите адрес" id="address-input">
+    <button id="search-button">Найти</button>
   </div>
 
-  <!-- Магазины -->
-  <div class="container section" id="shop-section">
-    <h1>Магазины</h1>
-    <p>Список доступных магазинов будет здесь.</p>
-  </div>
+  <!-- Карта -->
+  <div id="map"></div>
+  <button id="confirm-button" class="fade-in">Подтвердить адрес</button>
 
   <!-- Меню -->
   <div class="menu">
@@ -228,15 +251,8 @@
     function updateAddress(address) {
       document.getElementById("confirm-button").style.display = "block";
       document.getElementById("confirm-button").onclick = function () {
-        showSection('shop-section');
+        alert(`Адрес подтвержден: ${address}`);
       };
-    }
-
-    function showSection(sectionId) {
-      document.querySelectorAll('.section').forEach(section => {
-        section.classList.remove('active');
-      });
-      document.getElementById(sectionId).classList.add('active');
     }
   </script>
 </body>
