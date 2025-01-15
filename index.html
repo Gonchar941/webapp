@@ -111,39 +111,20 @@
       font-size: 12px;
     }
 
-    /* Подсказка */
-    .hint {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      background-color: rgba(0, 123, 255, 0.9);
-      color: white;
-      padding: 10px;
-      text-align: center;
-      font-size: 14px;
-      z-index: 1000;
-      animation: fadeOut 4s ease forwards;
+    /* Скрытые секции */
+    .section {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
     }
 
-    @keyframes fadeOut {
-      0% {
-        opacity: 1;
-      }
-      80% {
-        opacity: 1;
-      }
-      100% {
-        opacity: 0;
-        display: none;
-      }
+    .section.active {
+      display: block;
+      opacity: 1;
     }
   </style>
 </head>
 <body>
-  <!-- Подсказка -->
-  <div class="hint">Для удобного использования разверните приложение на весь экран.</div>
-
   <!-- Логотип -->
   <div class="container">
     <img src="logo.png" alt="Логотип DonCourier" class="logo">
@@ -157,10 +138,10 @@
     <button id="confirm-button">Подтвердить адрес</button>
   </div>
 
-  <!-- Список магазинов -->
-  <div class="container section" id="shops-section">
-    <h1>Доступные магазины</h1>
-    <p>Список магазинов будет доступен здесь.</p>
+  <!-- Магазины -->
+  <div class="container section" id="shop-section">
+    <h1>Магазины</h1>
+    <p>Список доступных магазинов будет здесь.</p>
   </div>
 
   <!-- Меню -->
@@ -169,7 +150,11 @@
       <i class="fa fa-map-marker"></i>
       <span>Адрес</span>
     </a>
-    <a href="#" onclick="showSection('shops-section')">
+    <a href="#" onclick="showSection('shop-section')">
+      <i class="fa fa-shopping-bag"></i>
+      <span>Магазин</span>
+    </a>
+    <a href="#">
       <i class="fa fa-shopping-cart"></i>
       <span>Корзина</span>
     </a>
@@ -241,11 +226,9 @@
     }
 
     function updateAddress(address) {
-      document.getElementById("selected-address").textContent = `Адрес: ${address}`;
-      const confirmButton = document.getElementById("confirm-button");
-      confirmButton.style.display = "block";
-      confirmButton.onclick = function () {
-        showSection('shops-section');
+      document.getElementById("confirm-button").style.display = "block";
+      document.getElementById("confirm-button").onclick = function () {
+        showSection('shop-section');
       };
     }
 
