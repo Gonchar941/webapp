@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DonCourier</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=81d0c68b-726a-45d1-863f-27efffade502"></script>
   <style>
     /* Общие стили */
@@ -90,52 +91,6 @@
       transform: scale(1.05);
     }
 
-    /* Увеличенные поля поиска */
-    .ymaps-2-1-79-searchbox-input__input {
-      font-size: 20px !important;
-      height: 50px !important;
-      padding: 10px !important;
-    }
-
-    .ymaps-2-1-79-searchbox-button {
-      height: 50px !important;
-      font-size: 20px !important;
-    }
-
-    /* Скрытые секции */
-    .section {
-      display: none;
-      opacity: 0;
-      transition: opacity 0.5s ease;
-    }
-
-    .section.active {
-      display: block;
-      opacity: 1;
-    }
-
-    /* Карточки магазинов */
-    .shop {
-      background-color: white;
-      padding: 20px;
-      margin: 15px 0;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      text-align: left;
-    }
-
-    .shop h3 {
-      margin: 0 0 10px;
-      font-size: 18px;
-      color: #007BFF;
-    }
-
-    .shop p {
-      margin: 5px 0;
-      font-size: 14px;
-      color: #555;
-    }
-
     /* Меню внизу */
     .menu {
       position: fixed;
@@ -148,17 +103,41 @@
       text-align: center;
       display: flex;
       justify-content: space-around;
-      font-size: 18px;
+      font-size: 16px;
     }
 
     .menu a {
       color: white;
       text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       transition: color 0.3s ease;
     }
 
     .menu a:hover {
       color: #ddd;
+    }
+
+    .menu i {
+      font-size: 24px;
+      margin-bottom: 5px;
+    }
+
+    .menu span {
+      font-size: 12px;
+    }
+
+    /* Скрытые секции */
+    .section {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .section.active {
+      display: block;
+      opacity: 1;
     }
   </style>
 </head>
@@ -182,25 +161,27 @@
   <!-- Список магазинов -->
   <div class="container section" id="shops-section">
     <h1>Доступные магазины</h1>
-    <div class="shop">
-      <h3>Магазин 1</h3>
-      <p>Адрес: ул. Артёма, 12</p>
-      <p>Время работы: 9:00 - 21:00</p>
-    </div>
-    <div class="shop">
-      <h3>Магазин 2</h3>
-      <p>Адрес: ул. Университетская, 34</p>
-      <p>Время работы: 10:00 - 20:00</p>
-    </div>
-    <a href="#" class="button" onclick="returnToAddress()">Вернуться к выбору адреса</a>
+    <p>Список магазинов будет доступен здесь.</p>
   </div>
 
   <!-- Меню -->
   <div class="menu">
-    <a href="#" onclick="showSection('address-section')">Адрес</a>
-    <a href="#" onclick="showSection('shops-section')">Магазины</a>
-    <a href="#contacts">Контакты</a>
-    <a href="#about">О компании</a>
+    <a href="#" onclick="showSection('address-section')">
+      <i class="fa fa-map-marker"></i>
+      <span>Адрес</span>
+    </a>
+    <a href="#" onclick="showSection('shops-section')">
+      <i class="fa fa-shopping-bag"></i>
+      <span>Магазины</span>
+    </a>
+    <a href="#contacts">
+      <i class="fa fa-envelope"></i>
+      <span>Контакты</span>
+    </a>
+    <a href="#about">
+      <i class="fa fa-info-circle"></i>
+      <span>О компании</span>
+    </a>
   </div>
 
   <script>
@@ -209,7 +190,7 @@
 
     function init() {
       myMap = new ymaps.Map("map", {
-        center: [48.0159, 37.8028], // Центр Донецка
+        center: [48.0159, 37.8028],
         zoom: 13,
         controls: ["zoomControl", "searchControl"]
       });
@@ -221,7 +202,6 @@
         strictBounds: true
       });
 
-      // Обработка выбора адреса из поиска
       searchControl.events.add("resultselect", function (e) {
         const index = e.get("index");
         searchControl.getResult(index).then(function (res) {
@@ -232,7 +212,6 @@
         });
       });
 
-      // Обработка клика на карте
       myMap.events.add("click", function (e) {
         const coords = e.get("coords");
         addMarker(coords[0], coords[1]);
@@ -276,10 +255,6 @@
         section.classList.remove('active');
       });
       document.getElementById(sectionId).classList.add('active');
-    }
-
-    function returnToAddress() {
-      showSection('address-section');
     }
   </script>
 </body>
