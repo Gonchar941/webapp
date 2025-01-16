@@ -12,166 +12,212 @@
       padding: 0;
       background-color: #f4f4f9;
       color: #333;
-      overflow: hidden;
+      overflow-x: hidden;
     }
 
     .container {
-      max-width: 400px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 20px;
-      text-align: center;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
     }
 
     .header {
       background-color: #007BFF;
       color: white;
-      padding: 15px;
+      text-align: center;
+      padding: 15px 0;
       font-size: 24px;
       font-weight: bold;
-      border-bottom: 4px solid #0056b3;
     }
 
-    .input-field {
-      margin: 20px 0;
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input, select, button {
       width: 100%;
-      padding: 12px;
+      padding: 10px;
       font-size: 16px;
+      margin-bottom: 10px;
       border: 1px solid #ccc;
       border-radius: 5px;
-      outline: none;
     }
 
-    .button {
+    button {
       background-color: #28a745;
       color: white;
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
+      font-size: 18px;
       cursor: pointer;
+      border: none;
       transition: background-color 0.3s ease;
     }
 
-    .button:hover {
+    button:hover {
       background-color: #218838;
-    }
-
-    .hidden {
-      display: none;
     }
 
     #map {
       width: 100%;
       height: 300px;
-      margin-top: 15px;
-      border-radius: 10px;
+      margin-top: 20px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
     }
 
-    .steps {
-      margin: 10px 0;
+    .hint {
+      background-color: #007BFF;
+      color: white;
+      text-align: center;
+      padding: 10px;
       font-size: 14px;
-      color: #555;
+      animation: fadeOut 5s forwards;
+    }
+
+    @keyframes fadeOut {
+      0% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { opacity: 0; display: none; }
     }
   </style>
 </head>
 <body>
-  <!-- Шапка -->
   <div class="header">DonCourier</div>
 
-  <!-- Контейнер -->
-  <div class="container">
+  <div class="container section active" id="name-section">
+    <h1>Введите ваше имя</h1>
+    <div class="form-group">
+      <label for="name">ФИО:</label>
+      <input type="text" id="name" placeholder="Введите ваше ФИО">
+    </div>
+    <button onclick="goToAddressSection()">Далее</button>
+  </div>
 
-    <!-- Шаг 1: Ввод имени -->
-    <div id="step-1">
-      <h2>Введите ваше имя</h2>
-      <input type="text" id="name" class="input-field" placeholder="Ваше имя">
-      <button class="button" onclick="goToStep(2)">Далее</button>
+  <div class="container section" id="address-section">
+    <h1>Выберите адрес</h1>
+    <div class="form-group">
+      <label for="district">Район:</label>
+      <select id="district" onchange="updateStreets()">
+        <option value="">Выберите район</option>
+        <option value="voroshilovsky">Ворошиловский</option>
+        <option value="kalininsky">Калининский</option>
+        <option value="kirovsky">Кировский</option>
+      </select>
     </div>
 
-    <!-- Шаг 2: Выбор адреса -->
-    <div id="step-2" class="hidden">
-      <h2>Введите ваш адрес</h2>
-      <input type="text" id="address" class="input-field" placeholder="Ваш адрес">
-      <div id="map"></div>
-      <button class="button" onclick="confirmAddress()">Подтвердить адрес</button>
+    <div class="form-group">
+      <label for="street">Улица:</label>
+      <select id="street" onchange="updateHouses()" disabled>
+        <option value="">Сначала выберите район</option>
+      </select>
     </div>
 
-    <!-- Шаг 3: Ввод номера телефона -->
-    <div id="step-3" class="hidden">
-      <h2>Введите ваш номер телефона</h2>
-      <input type="text" id="phone" class="input-field" placeholder="Ваш номер телефона">
-      <button class="button" onclick="submitForm()">Завершить регистрацию</button>
+    <div class="form-group">
+      <label for="house">Дом:</label>
+      <select id="house" disabled>
+        <option value="">Сначала выберите улицу</option>
+      </select>
     </div>
 
-    <!-- Сообщение об успешной регистрации -->
-    <div id="success-message" class="hidden">
-      <h2>Поздравляем!</h2>
-      <p>Вы успешно зарегистрировались.</p>
+    <div id="map"></div>
+    <button id="confirm-address-button" onclick="goToPhoneSection()" disabled>Подтвердить адрес</button>
+  </div>
+
+  <div class="container section" id="phone-section">
+    <h1>Введите номер телефона</h1>
+    <div class="form-group">
+      <label for="phone">Номер телефона:</label>
+      <input type="text" id="phone" placeholder="+7 000 000 00 00">
     </div>
+    <button onclick="submitRegistration()">Завершить регистрацию</button>
   </div>
 
   <script>
-    let myMap;
-    let marker;
+    const streets = {
+      voroshilovsky: ["Пушкинская", "Щорса", "Мира"],
+      kalininsky: ["Армейская", "Космонавтов", "Гагарина"],
+      kirovsky: ["Шахтерская", "Коммунистическая", "Заводская"]
+    };
 
-    function goToStep(step) {
-      document.querySelectorAll('.container > div').forEach(div => div.classList.add('hidden'));
-      document.getElementById(`step-${step}`).classList.remove('hidden');
+    const houses = {
+      Пушкинская: ["1", "2", "3"],
+      Щорса: ["4", "5", "6"],
+      Мира: ["7", "8", "9"],
+      Армейская: ["10", "11", "12"],
+      Космонавтов: ["13", "14", "15"],
+      Гагарина: ["16", "17", "18"],
+      Шахтерская: ["19", "20", "21"],
+      Коммунистическая: ["22", "23", "24"],
+      Заводская: ["25", "26", "27"]
+    };
 
-      if (step === 2) {
-        ymaps.ready(initMap);
+    function goToAddressSection() {
+      showSection('address-section');
+    }
+
+    function updateStreets() {
+      const district = document.getElementById('district').value;
+      const streetSelect = document.getElementById('street');
+      streetSelect.innerHTML = '<option value="">Выберите улицу</option>';
+
+      if (district) {
+        streets[district].forEach(street => {
+          const option = document.createElement('option');
+          option.value = street;
+          option.textContent = street;
+          streetSelect.appendChild(option);
+        });
+        streetSelect.disabled = false;
+      } else {
+        streetSelect.disabled = true;
       }
     }
 
-    function initMap() {
-      myMap = new ymaps.Map("map", {
-        center: [48.0159, 37.8028],
-        zoom: 12,
-        controls: ["zoomControl"]
+    function updateHouses() {
+      const street = document.getElementById('street').value;
+      const houseSelect = document.getElementById('house');
+      houseSelect.innerHTML = '<option value="">Выберите дом</option>';
+
+      if (street) {
+        houses[street].forEach(house => {
+          const option = document.createElement('option');
+          option.value = house;
+          option.textContent = house;
+          houseSelect.appendChild(option);
+        });
+        houseSelect.disabled = false;
+        document.getElementById('confirm-address-button').disabled = false;
+      } else {
+        houseSelect.disabled = true;
+      }
+    }
+
+    function goToPhoneSection() {
+      showSection('phone-section');
+    }
+
+    function submitRegistration() {
+      alert('Регистрация завершена!');
+    }
+
+    function showSection(sectionId) {
+      document.querySelectorAll('.section').forEach(section => {
+        section.classList.remove('active');
       });
-    }
-
-    function confirmAddress() {
-      const address = document.getElementById("address").value;
-      if (!address) {
-        alert("Пожалуйста, введите адрес.");
-        return;
-      }
-
-      ymaps.geocode(address, {
-        boundedBy: [[47.8, 37.6], [48.2, 38.0]],
-        strictBounds: true
-      }).then(res => {
-        const firstGeoObject = res.geoObjects.get(0);
-        if (firstGeoObject) {
-          const coords = firstGeoObject.geometry.getCoordinates();
-          myMap.setCenter(coords, 16, { duration: 500 });
-
-          if (marker) {
-            marker.geometry.setCoordinates(coords);
-          } else {
-            marker = new ymaps.Placemark(coords);
-            myMap.geoObjects.add(marker);
-          }
-
-          goToStep(3);
-        } else {
-          alert("Адрес не найден. Попробуйте другой запрос.");
-        }
-      });
-    }
-
-    function submitForm() {
-      const name = document.getElementById("name").value;
-      const phone = document.getElementById("phone").value;
-
-      if (!phone) {
-        alert("Пожалуйста, введите номер телефона.");
-        return;
-      }
-
-      document.querySelectorAll('.container > div').forEach(div => div.classList.add('hidden'));
-      document.getElementById("success-message").classList.remove('hidden');
+      document.getElementById(sectionId).classList.add('active');
     }
   </script>
 </body>
