@@ -97,6 +97,31 @@
     .autocomplete-suggestion:hover {
       background-color: #f0f0f0;
     }
+
+    .success-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      text-align: center;
+      z-index: 1000;
+      display: none;
+    }
+
+    .success-popup h1 {
+      font-size: 24px;
+      color: #28a745;
+    }
+
+    .success-popup p {
+      font-size: 16px;
+      margin: 10px 0;
+      color: #333;
+    }
   </style>
 </head>
 <body>
@@ -125,6 +150,12 @@
     <h1>Введите ваш номер телефона</h1>
     <input type="text" id="phone-input" placeholder="Введите ваш номер телефона">
     <button id="phone-button">Завершить</button>
+  </div>
+
+  <!-- Поздравление -->
+  <div class="success-popup" id="success-popup">
+    <h1>Регистрация успешна!</h1>
+    <p>Добро пожаловать в DonCourier!</p>
   </div>
 
   <script>
@@ -206,7 +237,7 @@
       if (phone.trim() === "") {
         alert("Пожалуйста, введите ваш номер телефона.");
       } else {
-        window.location.href = "menu.html"; // Перенаправление на menu.html
+        showSuccessPopup();
       }
     });
 
@@ -215,6 +246,15 @@
         section.classList.remove("active");
       });
       document.getElementById(sectionId).classList.add("active");
+    }
+
+    function showSuccessPopup() {
+      const popup = document.getElementById("success-popup");
+      popup.style.display = "block";
+      setTimeout(() => {
+        popup.style.display = "none";
+        window.location.href = "menu.html"; // Перенаправление на menu.html
+      }, 2000);
     }
   </script>
 </body>
