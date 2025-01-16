@@ -73,76 +73,50 @@
       margin: 20px 0;
       border-radius: 10px;
     }
+
+    .autocomplete-container {
+      position: relative;
+    }
+
+    .autocomplete-suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ccc;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+
+    .autocomplete-suggestion {
+      padding: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .autocomplete-suggestion:hover {
+      background-color: #f0f0f0;
+    }
   </style>
 </head>
 <body>
   <div class="hint">Разверните приложение на весь экран для удобного использования!</div>
 
-  <div class="container section active" id="name-section">
-    <h1>Введите ваше имя</h1>
-    <input type="text" id="name-input" placeholder="Введите ваше имя">
-    <button id="name-button">Продолжить</button>
-  </div>
-
-  <div class="container section" id="address-section">
-    <h1>Выберите адрес</h1>
-    <select id="district-select">
-      <option value="">Выберите район</option>
-      <option value="Ворошиловский">Ворошиловский район</option>
-      <option value="Калининский">Калининский район</option>
-      <option value="Киевский">Киевский район</option>
-    </select>
-    <select id="street-select" disabled>
-      <option value="">Сначала выберите район</option>
-    </select>
-    <select id="house-select" disabled>
-      <option value="">Сначала выберите улицу</option>
-    </select>
+  <div class="container section active" id="address-section">
+    <h1>Введите адрес доставки</h1>
+    <div class="autocomplete-container">
+      <input type="text" id="address-input" placeholder="Начните вводить адрес">
+      <div id="autocomplete-suggestions" class="autocomplete-suggestions"></div>
+    </div>
     <div id="map"></div>
     <button id="address-confirm-button" disabled>Подтвердить адрес</button>
-  </div>
-
-  <div class="container section" id="phone-section">
-    <h1>Введите ваш номер телефона</h1>
-    <input type="text" id="phone-input" placeholder="Введите ваш номер телефона">
-    <button id="phone-button">Завершить</button>
   </div>
 
   <script>
     ymaps.ready(init);
     let myMap, marker;
-
-    const districtCoordinates = {
-      "Ворошиловский": [48.0082, 37.8028],
-      "Калининский": [48.0367, 37.8427],
-      "Киевский": [48.0364, 37.7516]
-    };
-
-    const streetCoordinates = {
-      "Ворошиловский": {
-        "ул. Пушкина": [48.0075, 37.8001],
-        "ул. Артема": [48.0159, 37.8031]
-      },
-      "Калининский": {
-        "ул. Ленина": [48.0300, 37.8400],
-        "ул. Шевченко": [48.0350, 37.8500]
-      },
-      "Киевский": {
-        "ул. Гагарина": [48.0400, 37.7500],
-        "ул. Лермонтова": [48.0420, 37.7600]
-      }
-    };
-
-    const houseCoordinates = {
-      "ул. Пушкина": {
-        "10": [48.0077, 37.8002],
-        "12": [48.0078, 37.8003]
-      },
-      "ул. Артема": {
-        "20": [48.0160, 37.8032],
-        "22": [48.0161, 37.8033]
-      }
-    };
 
     function init() {
       myMap = new ymaps.Map("map", {
@@ -151,84 +125,61 @@
         controls: []
       });
 
-      document.getElementById("district-select").addEventListener("change", () => {
-        const district = document.getElementById("district-select").value;
-        const streetSelect = document.getElementById("street-select");
-        const houseSelect = document.getElementById("house-select");
+      document.getElementById("address-input").addEventListener("input", onInputAddress);
+      document.getElementById("address-confirm-button").addEventListener("click", confirmAddress);
+    }
 
-        streetSelect.innerHTML = '<option value="">Выберите улицу</option>';
-        houseSelect.innerHTML = '<option value="">Сначала выберите улицу</option>';
-        houseSelect.disabled = true;
+    function onInputAddress() {
+      const query = document.getElementById("address-input").value;
+      if (query.length < 3) return;
 
-        if (district) {
-          myMap.setCenter(districtCoordinates[district], 14);
+      ymaps.geocode(query, { boundedBy: [[47.8, 37.6], [48.2, 38.0]], strictBounds: true }).then(res => {
+        const suggestions = [];
+        res.geoObjects.each(geoObject => {
+          suggestions.push({
+            name: geoObject.getAddressLine(),
+            coords: geoObject.geometry.getCoordinates()
+          });
+        });
 
-          for (const street in streetCoordinates[district]) {
-            const option = document.createElement("option");
-            option.value = street;
-            option.textContent = street;
-            streetSelect.appendChild(option);
-          }
-
-          streetSelect.disabled = false;
-        } else {
-          streetSelect.disabled = true;
-        }
-      });
-
-      document.getElementById("street-select").addEventListener("change", () => {
-        const district = document.getElementById("district-select").value;
-        const street = document.getElementById("street-select").value;
-        const houseSelect = document.getElementById("house-select");
-
-        houseSelect.innerHTML = '<option value="">Выберите дом</option>';
-
-        if (street) {
-          myMap.setCenter(streetCoordinates[district][street], 16);
-
-          for (const house in houseCoordinates[street]) {
-            const option = document.createElement("option");
-            option.value = house;
-            option.textContent = house;
-            houseSelect.appendChild(option);
-          }
-
-          houseSelect.disabled = false;
-        } else {
-          houseSelect.disabled = true;
-        }
-      });
-
-      document.getElementById("house-select").addEventListener("change", () => {
-        const street = document.getElementById("street-select").value;
-        const house = document.getElementById("house-select").value;
-
-        if (house) {
-          myMap.setCenter(houseCoordinates[street][house], 18);
-          document.getElementById("address-confirm-button").disabled = false;
-        } else {
-          document.getElementById("address-confirm-button").disabled = true;
-        }
-      });
-
-      document.getElementById("address-confirm-button").addEventListener("click", () => {
-        showSection("phone-section");
-      });
-
-      document.getElementById("name-button").addEventListener("click", () => {
-        showSection("address-section");
-      });
-
-      document.getElementById("phone-button").addEventListener("click", () => {
-        window.location.href = "menu.html"; // Перенаправление на menu.html
+        updateAutocompleteSuggestions(suggestions);
       });
     }
 
-    function showSection(sectionId) {
-      document.querySelectorAll(".section").forEach(section => {
-        section.classList.remove("active");
+    function updateAutocompleteSuggestions(suggestions) {
+      const suggestionsContainer = document.getElementById("autocomplete-suggestions");
+      suggestionsContainer.innerHTML = "";
+
+      suggestions.forEach(suggestion => {
+        const suggestionElement = document.createElement("div");
+        suggestionElement.className = "autocomplete-suggestion";
+        suggestionElement.textContent = suggestion.name;
+        suggestionElement.addEventListener("click", () => {
+          selectSuggestion(suggestion);
+        });
+
+        suggestionsContainer.appendChild(suggestionElement);
       });
-      document.getElementById(sectionId).classList.add("active");
+    }
+
+    function selectSuggestion(suggestion) {
+      document.getElementById("address-input").value = suggestion.name;
+      document.getElementById("autocomplete-suggestions").innerHTML = "";
+      myMap.setCenter(suggestion.coords, 16);
+
+      if (!marker) {
+        marker = new ymaps.Placemark(suggestion.coords, {}, { draggable: true });
+        myMap.geoObjects.add(marker);
+      } else {
+        marker.geometry.setCoordinates(suggestion.coords);
+      }
+
+      document.getElementById("address-confirm-button").disabled = false;
+    }
+
+    function confirmAddress() {
+      const address = document.getElementById("address-input").value;
+      alert(`Адрес подтвержден: ${address}`);
     }
   </script>
 </body>
