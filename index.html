@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DonCourier</title>
+  <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=81d0c68b-726a-45d1-863f-27efffade502"></script>
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -11,65 +12,42 @@
       padding: 0;
       background-color: #f4f4f9;
       color: #333;
-    }
-
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background-color: #007BFF;
-      padding: 10px 20px;
-      color: white;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .header h1 {
-      font-size: 20px;
-      margin: 0;
-    }
-
-    .header img {
-      width: 30px;
-      height: 30px;
+      overflow: hidden;
     }
 
     .container {
-      max-width: 600px;
-      margin: 20px auto;
+      max-width: 400px;
+      margin: 0 auto;
       padding: 20px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .container h2 {
       text-align: center;
-      color: #007BFF;
     }
 
-    label {
-      display: block;
-      margin: 10px 0 5px;
+    .header {
+      background-color: #007BFF;
+      color: white;
+      padding: 15px;
+      font-size: 24px;
       font-weight: bold;
+      border-bottom: 4px solid #0056b3;
     }
 
-    input {
-      width: calc(100% - 20px);
-      padding: 10px;
-      margin-bottom: 15px;
+    .input-field {
+      margin: 20px 0;
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
       border: 1px solid #ccc;
       border-radius: 5px;
-      font-size: 16px;
+      outline: none;
     }
 
     .button {
-      width: 100%;
-      padding: 12px;
       background-color: #28a745;
       color: white;
+      padding: 10px 20px;
+      font-size: 16px;
       border: none;
       border-radius: 5px;
-      font-size: 16px;
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
@@ -78,52 +56,123 @@
       background-color: #218838;
     }
 
-    .nav-buttons {
-      display: flex;
-      justify-content: space-around;
-      margin-top: 20px;
+    .hidden {
+      display: none;
     }
 
-    .nav-buttons button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      background-color: #007BFF;
-      color: white;
-      cursor: pointer;
+    #map {
+      width: 100%;
+      height: 300px;
+      margin-top: 15px;
+      border-radius: 10px;
+    }
+
+    .steps {
+      margin: 10px 0;
       font-size: 14px;
-      transition: background-color 0.3s ease;
-    }
-
-    .nav-buttons button:hover {
-      background-color: #0056b3;
+      color: #555;
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>DonCourier</h1>
-    <img src="logo.png" alt="Логотип">
-  </div>
+  <!-- Шапка -->
+  <div class="header">DonCourier</div>
 
+  <!-- Контейнер -->
   <div class="container">
-    <h2>Регистрация</h2>
 
-    <label for="fio">ФИО:</label>
-    <input type="text" id="fio" placeholder="Введите ваше ФИО">
+    <!-- Шаг 1: Ввод имени -->
+    <div id="step-1">
+      <h2>Введите ваше имя</h2>
+      <input type="text" id="name" class="input-field" placeholder="Ваше имя">
+      <button class="button" onclick="goToStep(2)">Далее</button>
+    </div>
 
-    <label for="address">Адрес:</label>
-    <input type="text" id="address" placeholder="Введите адрес">
+    <!-- Шаг 2: Выбор адреса -->
+    <div id="step-2" class="hidden">
+      <h2>Введите ваш адрес</h2>
+      <input type="text" id="address" class="input-field" placeholder="Ваш адрес">
+      <div id="map"></div>
+      <button class="button" onclick="confirmAddress()">Подтвердить адрес</button>
+    </div>
 
-    <label for="phone">Номер телефона:</label>
-    <input type="text" id="phone" placeholder="Введите номер телефона">
+    <!-- Шаг 3: Ввод номера телефона -->
+    <div id="step-3" class="hidden">
+      <h2>Введите ваш номер телефона</h2>
+      <input type="text" id="phone" class="input-field" placeholder="Ваш номер телефона">
+      <button class="button" onclick="submitForm()">Завершить регистрацию</button>
+    </div>
 
-    <button class="button">Зарегистрироваться</button>
-
-    <div class="nav-buttons">
-      <button>Смотреть</button>
-      <button>Профиль</button>
+    <!-- Сообщение об успешной регистрации -->
+    <div id="success-message" class="hidden">
+      <h2>Поздравляем!</h2>
+      <p>Вы успешно зарегистрировались.</p>
     </div>
   </div>
+
+  <script>
+    let myMap;
+    let marker;
+
+    function goToStep(step) {
+      document.querySelectorAll('.container > div').forEach(div => div.classList.add('hidden'));
+      document.getElementById(`step-${step}`).classList.remove('hidden');
+
+      if (step === 2) {
+        ymaps.ready(initMap);
+      }
+    }
+
+    function initMap() {
+      myMap = new ymaps.Map("map", {
+        center: [48.0159, 37.8028],
+        zoom: 12,
+        controls: ["zoomControl"]
+      });
+    }
+
+    function confirmAddress() {
+      const address = document.getElementById("address").value;
+      if (!address) {
+        alert("Пожалуйста, введите адрес.");
+        return;
+      }
+
+      ymaps.geocode(address, {
+        boundedBy: [[47.8, 37.6], [48.2, 38.0]],
+        strictBounds: true
+      }).then(res => {
+        const firstGeoObject = res.geoObjects.get(0);
+        if (firstGeoObject) {
+          const coords = firstGeoObject.geometry.getCoordinates();
+          myMap.setCenter(coords, 16, { duration: 500 });
+
+          if (marker) {
+            marker.geometry.setCoordinates(coords);
+          } else {
+            marker = new ymaps.Placemark(coords);
+            myMap.geoObjects.add(marker);
+          }
+
+          goToStep(3);
+        } else {
+          alert("Адрес не найден. Попробуйте другой запрос.");
+        }
+      });
+    }
+
+    function submitForm() {
+      const name = document.getElementById("name").value;
+      const phone = document.getElementById("phone").value;
+
+      if (!phone) {
+        alert("Пожалуйста, введите номер телефона.");
+        return;
+      }
+
+      document.querySelectorAll('.container > div').forEach(div => div.classList.add('hidden'));
+      document.getElementById("success-message").classList.remove('hidden');
+    }
+  </script>
 </body>
 </html>
