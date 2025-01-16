@@ -4,164 +4,126 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DonCourier</title>
-  <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=81d0c68b-726a-45d1-863f-27efffade502"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Arial', sans-serif;
       margin: 0;
       padding: 0;
       background-color: #f4f4f9;
-      overflow: hidden;
+      color: #333;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #007BFF;
+      padding: 10px 20px;
+      color: white;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      font-size: 20px;
+      margin: 0;
+    }
+
+    .header img {
+      width: 30px;
+      height: 30px;
     }
 
     .container {
-      max-width: 400px;
-      margin: 0 auto;
+      max-width: 600px;
+      margin: 20px auto;
       padding: 20px;
       background: white;
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      margin-top: 10px;
     }
 
-    h1 {
+    .container h2 {
       text-align: center;
       color: #007BFF;
     }
 
     label {
       display: block;
-      margin: 15px 0 5px;
-      color: #333;
+      margin: 10px 0 5px;
+      font-weight: bold;
     }
 
     input {
-      width: 100%;
+      width: calc(100% - 20px);
       padding: 10px;
-      font-size: 16px;
-      margin-bottom: 10px;
-      border: 1px solid #ddd;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
       border-radius: 5px;
+      font-size: 16px;
     }
 
-    button {
+    .button {
       width: 100%;
       padding: 12px;
-      font-size: 16px;
-      color: white;
       background-color: #28a745;
+      color: white;
       border: none;
       border-radius: 5px;
+      font-size: 16px;
       cursor: pointer;
-      transition: background-color 0.3s;
+      transition: background-color 0.3s ease;
     }
 
-    button:hover {
+    .button:hover {
       background-color: #218838;
     }
 
-    #map {
-      width: 100%;
-      height: 300px;
+    .nav-buttons {
+      display: flex;
+      justify-content: space-around;
       margin-top: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
 
-    .hint {
-      text-align: center;
-      padding: 10px;
-      background: #007BFF;
+    .nav-buttons button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      background-color: #007BFF;
       color: white;
-      margin: 0;
-      font-weight: bold;
-      animation: fadeOut 5s forwards;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s ease;
     }
 
-    @keyframes fadeOut {
-      0% { opacity: 1; }
-      80% { opacity: 1; }
-      100% { opacity: 0; display: none; }
+    .nav-buttons button:hover {
+      background-color: #0056b3;
     }
   </style>
 </head>
 <body>
-
-  <div class="hint">Разверните приложение на весь экран для удобного использования!</div>
-
-  <div class="container">
-    <h1>Регистрация</h1>
-    <label for="name">ФИО:</label>
-    <input type="text" id="name" placeholder="Введите ваше ФИО">
-
-    <label for="address">Адрес:</label>
-    <input type="text" id="address" placeholder="Введите ваш адрес">
-    <button id="auto-locate">Определить адрес автоматически</button>
-
-    <label for="phone">Номер телефона:</label>
-    <input type="text" id="phone" placeholder="+7 000 000 00 00">
-
-    <button id="register">Зарегистрироваться</button>
+  <div class="header">
+    <h1>DonCourier</h1>
+    <img src="logo.png" alt="Логотип">
   </div>
 
-  <div id="map"></div>
+  <div class="container">
+    <h2>Регистрация</h2>
 
-  <script>
-    ymaps.ready(init);
-    let myMap, marker;
+    <label for="fio">ФИО:</label>
+    <input type="text" id="fio" placeholder="Введите ваше ФИО">
 
-    function init() {
-      myMap = new ymaps.Map("map", {
-        center: [48.0159, 37.8028],
-        zoom: 13,
-        controls: []
-      });
+    <label for="address">Адрес:</label>
+    <input type="text" id="address" placeholder="Введите адрес">
 
-      document.getElementById("auto-locate").addEventListener("click", () => {
-        navigator.geolocation.getCurrentPosition(position => {
-          const { latitude, longitude } = position.coords;
-          const coords = [latitude, longitude];
-          myMap.setCenter(coords, 16);
-          addMarker(coords);
-          ymaps.geocode(coords).then(res => {
-            const address = res.geoObjects.get(0).getAddressLine();
-            document.getElementById("address").value = address;
-          });
-        }, () => {
-          alert("Не удалось определить местоположение.");
-        });
-      });
+    <label for="phone">Номер телефона:</label>
+    <input type="text" id="phone" placeholder="Введите номер телефона">
 
-      document.getElementById("register").addEventListener("click", () => {
-        const name = document.getElementById("name").value;
-        const address = document.getElementById("address").value;
-        const phone = document.getElementById("phone").value;
+    <button class="button">Зарегистрироваться</button>
 
-        if (name && address && phone) {
-          alert(`Добро пожаловать, ${name}! Ваш адрес: ${address}. Номер телефона: ${phone}.`);
-        } else {
-          alert("Пожалуйста, заполните все поля!");
-        }
-      });
-    }
-
-    function addMarker(coords) {
-      if (marker) {
-        marker.geometry.setCoordinates(coords);
-      } else {
-        marker = new ymaps.Placemark(coords, {}, { draggable: true });
-        myMap.geoObjects.add(marker);
-
-        marker.events.add("dragend", () => {
-          const newCoords = marker.geometry.getCoordinates();
-          ymaps.geocode(newCoords).then(res => {
-            const address = res.geoObjects.get(0).getAddressLine();
-            document.getElementById("address").value = address;
-          });
-        });
-      }
-    }
-  </script>
-
+    <div class="nav-buttons">
+      <button>Смотреть</button>
+      <button>Профиль</button>
+    </div>
+  </div>
 </body>
 </html>
