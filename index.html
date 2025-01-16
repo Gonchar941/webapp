@@ -4,313 +4,130 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DonCourier</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=81d0c68b-726a-45d1-863f-27efffade502"></script>
   <style>
     body {
-      font-family: 'Arial', sans-serif;
+      font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #f4f4f9;
-      color: #333;
-      overflow-x: hidden;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    .header-section {
-      background-color: #007BFF;
-      color: white;
-      padding: 20px;
-      text-align: center;
-      border-bottom-left-radius: 20px;
-      border-bottom-right-radius: 20px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .header-section input {
-      width: 80%;
-      padding: 12px;
-      font-size: 18px;
-      border: none;
-      border-radius: 20px;
-      margin-bottom: 10px;
-      outline: none;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      background-color: #fff;
-    }
-
-    .header-section button {
-      padding: 12px 20px;
-      font-size: 16px;
-      color: white;
-      background-color: #28a745;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.3s ease;
-    }
-
-    .header-section button:hover {
-      background-color: #218838;
-      transform: scale(1.05);
-    }
-
-    #map {
-      width: 100%;
-      height: 350px;
-      margin: 20px 0;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    #confirm-button {
-      display: block;
-      margin: 10px auto;
-      padding: 14px 30px;
-      font-size: 18px;
-      color: white;
-      background-color: #FF5722;
-      border: none;
-      border-radius: 30px;
-      cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-      transition: background-color 0.3s ease, transform 0.3s ease;
-    }
-
-    #confirm-button:hover {
-      background-color: #E64A19;
-      transform: scale(1.1);
-    }
-
-    .hint {
-      background-color: #007BFF;
-      color: white;
-      padding: 10px;
-      text-align: center;
-      border-radius: 5px;
-      font-weight: bold;
-      animation: fadeOut 5s forwards;
-      font-size: 16px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    @keyframes fadeOut {
-      0% { opacity: 1; }
-      80% { opacity: 1; }
-      100% { opacity: 0; display: none; }
-    }
-
-    .menu {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background-color: #007BFF;
-      color: white;
-      padding: 10px;
-      text-align: center;
-      display: flex;
-      justify-content: space-around;
-      font-size: 16px;
-    }
-
-    .menu a {
-      color: white;
-      text-decoration: none;
       display: flex;
       flex-direction: column;
       align-items: center;
-      transition: color 0.3s ease, transform 0.3s ease;
+      justify-content: center;
+      background-color: #f9f9f9;
+      height: 100vh;
     }
-
-    .menu a:hover {
-      color: #ddd;
-      transform: scale(1.1);
+    h1, h2 {
+      margin: 10px 0;
+      color: #333;
     }
-
-    .menu i {
-      font-size: 24px;
-      margin-bottom: 5px;
+    select, input, button {
+      margin: 10px 0;
+      padding: 10px;
+      font-size: 16px;
+      width: 80%;
     }
-
-    .menu span {
-      font-size: 12px;
-    }
-
-    .section {
-      display: none;
-      opacity: 0;
-      transition: opacity 0.5s ease, transform 0.3s ease;
-    }
-
-    .section.active {
-      display: block;
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .popup {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 20px;
-      background-color: white;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      border-radius: 10px;
-      z-index: 1000;
-      display: none;
-    }
-
-    .popup h2 {
-      color: #28a745;
-    }
-
-    .popup button {
-      margin-top: 10px;
-      padding: 10px 20px;
+    button {
       background-color: #007BFF;
       color: white;
       border: none;
-      border-radius: 20px;
+      border-radius: 5px;
       cursor: pointer;
-      transition: background-color 0.3s ease;
     }
-
-    .popup button:hover {
+    button:hover {
       background-color: #0056b3;
+    }
+    #map {
+      width: 80%;
+      height: 300px;
+      margin: 20px 0;
+      border-radius: 10px;
+    }
+    #status-message {
+      color: red;
+      font-size: 14px;
+      margin-top: 10px;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <!-- Подсказка -->
-  <div class="hint">Разверните приложение на весь экран для удобного использования!</div>
+  <h1>Выбор района и адреса</h1>
+  
+  <label for="district-select">Выберите район:</label>
+  <select id="district-select">
+    <option value="">-- Выберите район --</option>
+    <option value="Ворошиловский">Ворошиловский район</option>
+    <option value="Калининский">Калининский район</option>
+    <option value="Кировский">Кировский район</option>
+  </select>
 
-  <!-- Верхний блок -->
-  <div class="header-section section active" id="address-section">
-    <h1>Выберите адрес доставки</h1>
-    <input type="text" id="address-input" placeholder="Введите адрес">
-    <button id="search-button">Найти</button>
-    <div id="map"></div>
-    <button id="confirm-button">Подтвердить адрес</button>
-  </div>
+  <label for="address-input">Введите адрес:</label>
+  <input type="text" id="address-input" placeholder="Улица, дом">
 
-  <!-- Всплывающее окно -->
-  <div class="popup" id="popup">
-    <h2>Поздравляем!</h2>
-    <p>Ваш адрес подтвержден.</p>
-    <button onclick="closePopup()">Закрыть</button>
-  </div>
+  <button id="confirm-address">Подтвердить адрес</button>
+  <p id="status-message"></p>
 
-  <!-- Магазины -->
-  <div class="section" id="shop-section">
-    <h1>Магазины</h1>
-    <p>Список доступных магазинов.</p>
-  </div>
-
-  <!-- Корзина -->
-  <div class="section" id="cart-section">
-    <h1>Корзина</h1>
-    <p>Здесь будут ваши товары.</p>
-  </div>
-
-  <!-- Контакты -->
-  <div class="section" id="contacts-section">
-    <h1>Контакты</h1>
-    <p>Email: support@doncourier.com</p>
-    <p>Телефон: +380 50 123 45 67</p>
-  </div>
-
-  <!-- Профиль -->
-  <div class="section" id="profile-section">
-    <h1>Профиль</h1>
-    <p>Личная информация.</p>
-  </div>
-
-  <!-- Меню -->
-  <div class="menu">
-    <a href="#" onclick="showSection('address-section')">
-      <i class="fa fa-map-marker"></i>
-      <span>Адрес</span>
-    </a>
-    <a href="#" onclick="showSection('shop-section')">
-      <i class="fa fa-shopping-bag"></i>
-      <span>Магазин</span>
-    </a>
-    <a href="#" onclick="showSection('cart-section')">
-      <i class="fa fa-shopping-cart"></i>
-      <span>Корзина</span>
-    </a>
-    <a href="#" onclick="showSection('contacts-section')">
-      <i class="fa fa-envelope"></i>
-      <span>Контакты</span>
-    </a>
-    <a href="#" onclick="showSection('profile-section')">
-      <i class="fa fa-user"></i>
-      <span>Профиль</span>
-    </a>
-  </div>
+  <div id="map"></div>
 
   <script>
-    ymaps.ready(init);
-    let myMap, marker;
+    const districtSelect = document.getElementById("district-select");
+    const addressInput = document.getElementById("address-input");
+    const confirmButton = document.getElementById("confirm-address");
+    const statusMessage = document.getElementById("status-message");
 
-    function init() {
-      myMap = new ymaps.Map("map", {
-        center: [48.0159, 37.8028],
-        zoom: 13,
-        controls: ["zoomControl"]
-      });
+    // Список адресов по районам
+    const addressData = {
+      "Ворошиловский": ["ул. Пушкина, 1", "ул. Ленина, 10", "ул. Артёма, 20"],
+      "Калининский": ["ул. Молодёжная, 5", "ул. Заводская, 15", "ул. Промышленная, 30"],
+      "Кировский": ["ул. Шахтёрская, 12", "ул. Гвардейская, 25", "ул. Парковая, 50"]
+    };
 
-      document.getElementById("search-button").addEventListener("click", () => {
-        const query = document.getElementById("address-input").value;
-        if (query) {
-          ymaps.geocode(query, { boundedBy: [[47.8, 37.6], [48.2, 38.0]], strictBounds: true }).then(res => {
-            const firstGeoObject = res.geoObjects.get(0);
-            if (firstGeoObject) {
-              const coords = firstGeoObject.geometry.getCoordinates();
-              myMap.setCenter(coords, 16, { duration: 500 });
-              addMarker(coords[0], coords[1]);
-              document.getElementById("confirm-button").onclick = function () {
-                showPopup();
-              };
-            } else {
-              alert("Адрес не найден. Попробуйте другой запрос.");
-            }
-          });
-        }
-      });
-    }
+    // Обработка подтверждения адреса
+    confirmButton.addEventListener("click", () => {
+      const selectedDistrict = districtSelect.value;
+      const enteredAddress = addressInput.value.trim();
 
-    function addMarker(lat, lng) {
-      if (marker) {
-        marker.geometry.setCoordinates([lat, lng]);
-      } else {
-        marker = new ymaps.Placemark([lat, lng], {}, { draggable: true });
-        myMap.geoObjects.add(marker);
+      if (!selectedDistrict) {
+        statusMessage.textContent = "Пожалуйста, выберите район.";
+        return;
       }
-    }
 
-    function showSection(sectionId) {
-      document.querySelectorAll('.section').forEach(section => {
-        section.classList.remove('active');
+      if (!enteredAddress) {
+        statusMessage.textContent = "Пожалуйста, введите адрес.";
+        return;
+      }
+
+      if (addressData[selectedDistrict].includes(enteredAddress)) {
+        statusMessage.style.color = "green";
+        statusMessage.textContent = `Ваш адрес: ${enteredAddress} успешно подтверждён.`;
+        showMapForAddress(enteredAddress);
+      } else {
+        statusMessage.style.color = "red";
+        statusMessage.textContent = "Адрес не найден в выбранном районе. Проверьте введённые данные.";
+      }
+    });
+
+    // Показ карты с адресом
+    function showMapForAddress(address) {
+      ymaps.ready(() => {
+        const myMap = new ymaps.Map("map", {
+          center: [48.0159, 37.8028], // Центр Донецка
+          zoom: 12,
+          controls: ["zoomControl", "searchControl"]
+        });
+
+        ymaps.geocode(address, { results: 1 }).then(res => {
+          const firstGeoObject = res.geoObjects.get(0);
+          if (firstGeoObject) {
+            const coords = firstGeoObject.geometry.getCoordinates();
+            myMap.geoObjects.add(new ymaps.Placemark(coords, { balloonContent: address }));
+            myMap.setCenter(coords, 16);
+          } else {
+            statusMessage.textContent = "Не удалось найти адрес на карте.";
+          }
+        });
       });
-      document.getElementById(sectionId).classList.add('active');
-    }
-
-    function showPopup() {
-      document.getElementById("popup").style.display = "block";
-    }
-
-    function closePopup() {
-      document.getElementById("popup").style.display = "none";
-      showSection("shop-section");
     }
   </script>
 </body>
