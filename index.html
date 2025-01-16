@@ -38,7 +38,6 @@
     }
 
     .section {
-      margin-top: 20px;
       display: none;
     }
 
@@ -73,38 +72,20 @@
       margin: 20px 0;
       border-radius: 10px;
     }
-
-    .autocomplete-container {
-      position: relative;
-    }
-
-    .autocomplete-suggestions {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: white;
-      border: 1px solid #ccc;
-      max-height: 200px;
-      overflow-y: auto;
-      z-index: 1000;
-    }
-
-    .autocomplete-suggestion {
-      padding: 10px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    .autocomplete-suggestion:hover {
-      background-color: #f0f0f0;
-    }
   </style>
 </head>
 <body>
   <div class="hint">Разверните приложение на весь экран для удобного использования!</div>
 
-  <div class="container section active" id="address-section">
+  <!-- Имя -->
+  <div class="container section active" id="name-section">
+    <h1>Введите ваше имя</h1>
+    <input type="text" id="name-input" placeholder="Введите ваше имя">
+    <button id="name-button">Продолжить</button>
+  </div>
+
+  <!-- Адрес -->
+  <div class="container section" id="address-section">
     <h1>Введите адрес доставки</h1>
     <div class="autocomplete-container">
       <input type="text" id="address-input" placeholder="Начните вводить адрес">
@@ -112,6 +93,13 @@
     </div>
     <div id="map"></div>
     <button id="address-confirm-button" disabled>Подтвердить адрес</button>
+  </div>
+
+  <!-- Телефон -->
+  <div class="container section" id="phone-section">
+    <h1>Введите ваш номер телефона</h1>
+    <input type="text" id="phone-input" placeholder="Введите ваш номер телефона">
+    <button id="phone-button">Завершить</button>
   </div>
 
   <script>
@@ -126,7 +114,9 @@
       });
 
       document.getElementById("address-input").addEventListener("input", onInputAddress);
-      document.getElementById("address-confirm-button").addEventListener("click", confirmAddress);
+      document.getElementById("address-confirm-button").addEventListener("click", () => {
+        showSection("phone-section");
+      });
     }
 
     function onInputAddress() {
@@ -177,9 +167,29 @@
       document.getElementById("address-confirm-button").disabled = false;
     }
 
-    function confirmAddress() {
-      const address = document.getElementById("address-input").value;
-      alert(`Адрес подтвержден: ${address}`);
+    document.getElementById("name-button").addEventListener("click", () => {
+      const name = document.getElementById("name-input").value;
+      if (name.trim() === "") {
+        alert("Пожалуйста, введите ваше имя.");
+      } else {
+        showSection("address-section");
+      }
+    });
+
+    document.getElementById("phone-button").addEventListener("click", () => {
+      const phone = document.getElementById("phone-input").value;
+      if (phone.trim() === "") {
+        alert("Пожалуйста, введите ваш номер телефона.");
+      } else {
+        alert("Регистрация завершена!");
+      }
+    });
+
+    function showSection(sectionId) {
+      document.querySelectorAll(".section").forEach(section => {
+        section.classList.remove("active");
+      });
+      document.getElementById(sectionId).classList.add("active");
     }
   </script>
 </body>
