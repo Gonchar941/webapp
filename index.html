@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DonCourier - Регистрация</title>
+  <title>DonCourier</title>
+  <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=81d0c68b-726a-45d1-863f-27efffade502"></script>
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -11,114 +12,224 @@
       padding: 0;
       background-color: #f4f4f9;
       color: #333;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      overflow-x: hidden;
     }
 
     .container {
-      background-color: #fff;
+      max-width: 1200px;
+      margin: 0 auto;
       padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 400px;
-      text-align: center;
-    }
-
-    h1 {
-      font-size: 24px;
-      color: #007BFF;
-      margin-bottom: 20px;
-    }
-
-    label {
-      display: block;
-      margin: 10px 0 5px;
-      font-size: 16px;
-      text-align: left;
-    }
-
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 14px;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      background-color: #28a745;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #218838;
     }
 
     .hint {
       background-color: #007BFF;
       color: white;
       padding: 10px;
-      border-radius: 5px;
-      font-size: 14px;
-      margin-bottom: 15px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 16px;
       animation: fadeOut 3s forwards;
     }
 
     @keyframes fadeOut {
-      0% {
-        opacity: 1;
-      }
-      80% {
-        opacity: 1;
-      }
-      100% {
-        opacity: 0;
-        display: none;
-      }
+      0% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { opacity: 0; display: none; }
+    }
+
+    .section {
+      margin-top: 20px;
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    select, input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #map {
+      width: 100%;
+      height: 350px;
+      margin: 20px 0;
+      border-radius: 10px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="hint">Разверните приложение на весь экран для удобного использования!</div>
-    <h1>Регистрация</h1>
+  <div class="hint">Разверните приложение на весь экран для удобного использования!</div>
 
-    <label for="name">Имя:</label>
-    <input type="text" id="name" placeholder="Введите ваше имя">
+  <div class="container section active" id="name-section">
+    <h1>Введите ваше имя</h1>
+    <input type="text" id="name-input" placeholder="Введите ваше имя">
+    <button id="name-button">Продолжить</button>
+  </div>
 
-    <label for="address">Адрес:</label>
-    <input type="text" id="address" placeholder="Введите ваш адрес">
+  <div class="container section" id="address-section">
+    <h1>Выберите адрес</h1>
+    <select id="district-select">
+      <option value="">Выберите район</option>
+      <option value="Ворошиловский">Ворошиловский район</option>
+      <option value="Калининский">Калининский район</option>
+      <option value="Киевский">Киевский район</option>
+    </select>
+    <select id="street-select" disabled>
+      <option value="">Сначала выберите район</option>
+    </select>
+    <select id="house-select" disabled>
+      <option value="">Сначала выберите улицу</option>
+    </select>
+    <div id="map"></div>
+    <button id="address-confirm-button" disabled>Подтвердить адрес</button>
+  </div>
 
-    <label for="phone">Номер телефона:</label>
-    <input type="text" id="phone" placeholder="Введите ваш номер телефона">
-
-    <button id="register-button">Зарегистрироваться</button>
+  <div class="container section" id="phone-section">
+    <h1>Введите ваш номер телефона</h1>
+    <input type="text" id="phone-input" placeholder="Введите ваш номер телефона">
+    <button id="phone-button">Завершить</button>
   </div>
 
   <script>
-    document.getElementById("register-button").addEventListener("click", function () {
-      const name = document.getElementById("name").value;
-      const address = document.getElementById("address").value;
-      const phone = document.getElementById("phone").value;
+    ymaps.ready(init);
+    let myMap, marker;
 
-      if (name && address && phone) {
-        alert(`Регистрация успешна!\nИмя: ${name}\nАдрес: ${address}\nТелефон: ${phone}`);
-        window.location.href = "menu.html"; // Перенаправление на menu.html
-      } else {
-        alert("Пожалуйста, заполните все поля.");
+    const districtCoordinates = {
+      "Ворошиловский": [48.0082, 37.8028],
+      "Калининский": [48.0367, 37.8427],
+      "Киевский": [48.0364, 37.7516]
+    };
+
+    const streetCoordinates = {
+      "Ворошиловский": {
+        "ул. Пушкина": [48.0075, 37.8001],
+        "ул. Артема": [48.0159, 37.8031]
+      },
+      "Калининский": {
+        "ул. Ленина": [48.0300, 37.8400],
+        "ул. Шевченко": [48.0350, 37.8500]
+      },
+      "Киевский": {
+        "ул. Гагарина": [48.0400, 37.7500],
+        "ул. Лермонтова": [48.0420, 37.7600]
       }
-    });
+    };
+
+    const houseCoordinates = {
+      "ул. Пушкина": {
+        "10": [48.0077, 37.8002],
+        "12": [48.0078, 37.8003]
+      },
+      "ул. Артема": {
+        "20": [48.0160, 37.8032],
+        "22": [48.0161, 37.8033]
+      }
+    };
+
+    function init() {
+      myMap = new ymaps.Map("map", {
+        center: [48.0159, 37.8028],
+        zoom: 13,
+        controls: []
+      });
+
+      document.getElementById("district-select").addEventListener("change", () => {
+        const district = document.getElementById("district-select").value;
+        const streetSelect = document.getElementById("street-select");
+        const houseSelect = document.getElementById("house-select");
+
+        streetSelect.innerHTML = '<option value="">Выберите улицу</option>';
+        houseSelect.innerHTML = '<option value="">Сначала выберите улицу</option>';
+        houseSelect.disabled = true;
+
+        if (district) {
+          myMap.setCenter(districtCoordinates[district], 14);
+
+          for (const street in streetCoordinates[district]) {
+            const option = document.createElement("option");
+            option.value = street;
+            option.textContent = street;
+            streetSelect.appendChild(option);
+          }
+
+          streetSelect.disabled = false;
+        } else {
+          streetSelect.disabled = true;
+        }
+      });
+
+      document.getElementById("street-select").addEventListener("change", () => {
+        const district = document.getElementById("district-select").value;
+        const street = document.getElementById("street-select").value;
+        const houseSelect = document.getElementById("house-select");
+
+        houseSelect.innerHTML = '<option value="">Выберите дом</option>';
+
+        if (street) {
+          myMap.setCenter(streetCoordinates[district][street], 16);
+
+          for (const house in houseCoordinates[street]) {
+            const option = document.createElement("option");
+            option.value = house;
+            option.textContent = house;
+            houseSelect.appendChild(option);
+          }
+
+          houseSelect.disabled = false;
+        } else {
+          houseSelect.disabled = true;
+        }
+      });
+
+      document.getElementById("house-select").addEventListener("change", () => {
+        const street = document.getElementById("street-select").value;
+        const house = document.getElementById("house-select").value;
+
+        if (house) {
+          myMap.setCenter(houseCoordinates[street][house], 18);
+          document.getElementById("address-confirm-button").disabled = false;
+        } else {
+          document.getElementById("address-confirm-button").disabled = true;
+        }
+      });
+
+      document.getElementById("address-confirm-button").addEventListener("click", () => {
+        showSection("phone-section");
+      });
+
+      document.getElementById("name-button").addEventListener("click", () => {
+        showSection("address-section");
+      });
+
+      document.getElementById("phone-button").addEventListener("click", () => {
+        window.location.href = "menu.html"; // Перенаправление на menu.html
+      });
+    }
+
+    function showSection(sectionId) {
+      document.querySelectorAll(".section").forEach(section => {
+        section.classList.remove("active");
+      });
+      document.getElementById(sectionId).classList.add("active");
+    }
   </script>
 </body>
 </html>
