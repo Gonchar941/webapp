@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Регистрация</title>
+  <title>DonCourier</title>
   <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=81d0c68b-726a-45d1-863f-27efffade502"></script>
   <style>
     body {
@@ -11,72 +11,70 @@
       margin: 0;
       padding: 0;
       background-color: #f4f4f9;
+      overflow: hidden;
     }
 
     .container {
       max-width: 400px;
-      margin: 50px auto;
+      margin: 0 auto;
       padding: 20px;
-      background-color: white;
+      background: white;
       border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      margin-top: 10px;
     }
 
-    .container h1 {
+    h1 {
       text-align: center;
       color: #007BFF;
-      margin-bottom: 20px;
     }
 
-    .container label {
+    label {
       display: block;
-      margin-top: 10px;
-      color: #555;
-      font-weight: bold;
+      margin: 15px 0 5px;
+      color: #333;
     }
 
-    .container input, .container button {
+    input {
       width: 100%;
       padding: 10px;
-      margin-top: 5px;
+      font-size: 16px;
+      margin-bottom: 10px;
       border: 1px solid #ddd;
       border-radius: 5px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
       font-size: 16px;
-    }
-
-    .container input:focus {
-      border-color: #007BFF;
-      outline: none;
-    }
-
-    .container button {
-      background-color: #28a745;
       color: white;
-      font-size: 18px;
-      font-weight: bold;
-      cursor: pointer;
+      background-color: #28a745;
       border: none;
-      transition: background-color 0.3s ease, transform 0.2s ease;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
     }
 
-    .container button:hover {
+    button:hover {
       background-color: #218838;
-      transform: scale(1.05);
+    }
+
+    #map {
+      width: 100%;
+      height: 300px;
+      margin-top: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
 
     .hint {
-      background-color: #007BFF;
-      color: white;
-      padding: 10px;
       text-align: center;
-      border-radius: 5px;
-      position: fixed;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 16px;
+      padding: 10px;
+      background: #007BFF;
+      color: white;
+      margin: 0;
       font-weight: bold;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       animation: fadeOut 5s forwards;
     }
 
@@ -88,60 +86,82 @@
   </style>
 </head>
 <body>
-  <!-- Подсказка -->
-  <div class="hint">Разверните приложение на весь экран для удобной работы!</div>
 
-  <!-- Регистрационная форма -->
+  <div class="hint">Разверните приложение на весь экран для удобного использования!</div>
+
   <div class="container">
     <h1>Регистрация</h1>
     <label for="name">ФИО:</label>
-    <input type="text" id="name" placeholder="Введите ваше ФИО" required>
+    <input type="text" id="name" placeholder="Введите ваше ФИО">
 
     <label for="address">Адрес:</label>
-    <input type="text" id="address" placeholder="Введите ваш адрес" required>
-    <button id="auto-detect">Определить адрес автоматически</button>
+    <input type="text" id="address" placeholder="Введите ваш адрес">
+    <button id="auto-locate">Определить адрес автоматически</button>
 
     <label for="phone">Номер телефона:</label>
-    <input type="tel" id="phone" placeholder="+7 000 000 00 00" required>
+    <input type="text" id="phone" placeholder="+7 000 000 00 00">
 
-    <button id="submit-button">Зарегистрироваться</button>
+    <button id="register">Зарегистрироваться</button>
   </div>
 
-  <script>
-    // Автоопределение адреса через геолокацию
-    document.getElementById("auto-detect").addEventListener("click", () => {
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition((position) => {
-          const { latitude, longitude } = position.coords;
+  <div id="map"></div>
 
-          ymaps.geocode([latitude, longitude]).then((res) => {
+  <script>
+    ymaps.ready(init);
+    let myMap, marker;
+
+    function init() {
+      myMap = new ymaps.Map("map", {
+        center: [48.0159, 37.8028],
+        zoom: 13,
+        controls: []
+      });
+
+      document.getElementById("auto-locate").addEventListener("click", () => {
+        navigator.geolocation.getCurrentPosition(position => {
+          const { latitude, longitude } = position.coords;
+          const coords = [latitude, longitude];
+          myMap.setCenter(coords, 16);
+          addMarker(coords);
+          ymaps.geocode(coords).then(res => {
             const address = res.geoObjects.get(0).getAddressLine();
             document.getElementById("address").value = address;
-          }).catch(() => {
-            alert("Не удалось определить адрес. Попробуйте позже.");
           });
         }, () => {
-          alert("Геолокация отключена или не поддерживается.");
+          alert("Не удалось определить местоположение.");
         });
+      });
+
+      document.getElementById("register").addEventListener("click", () => {
+        const name = document.getElementById("name").value;
+        const address = document.getElementById("address").value;
+        const phone = document.getElementById("phone").value;
+
+        if (name && address && phone) {
+          alert(`Добро пожаловать, ${name}! Ваш адрес: ${address}. Номер телефона: ${phone}.`);
+        } else {
+          alert("Пожалуйста, заполните все поля!");
+        }
+      });
+    }
+
+    function addMarker(coords) {
+      if (marker) {
+        marker.geometry.setCoordinates(coords);
       } else {
-        alert("Ваш браузер не поддерживает геолокацию.");
+        marker = new ymaps.Placemark(coords, {}, { draggable: true });
+        myMap.geoObjects.add(marker);
+
+        marker.events.add("dragend", () => {
+          const newCoords = marker.geometry.getCoordinates();
+          ymaps.geocode(newCoords).then(res => {
+            const address = res.geoObjects.get(0).getAddressLine();
+            document.getElementById("address").value = address;
+          });
+        });
       }
-    });
-
-    // Обработка регистрации
-    document.getElementById("submit-button").addEventListener("click", () => {
-      const name = document.getElementById("name").value.trim();
-      const address = document.getElementById("address").value.trim();
-      const phone = document.getElementById("phone").value.trim();
-
-      if (!name || !address || !phone) {
-        alert("Пожалуйста, заполните все поля!");
-        return;
-      }
-
-      alert(`Регистрация успешна!\n\nВаши данные:\nФИО: ${name}\nАдрес: ${address}\nТелефон: ${phone}`);
-      // Здесь можно отправить данные на сервер или сохранить их
-    });
+    }
   </script>
+
 </body>
 </html>
