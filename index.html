@@ -10,123 +10,158 @@
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
+      background-color: #f9f9f9;
+      color: #333;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background-color: #f9f9f9;
       height: 100vh;
     }
+
     h1, h2 {
-      margin: 10px 0;
-      color: #333;
+      color: #007BFF;
+      margin-bottom: 20px;
     }
+
     select, input, button {
       margin: 10px 0;
       padding: 10px;
       font-size: 16px;
       width: 80%;
+      max-width: 400px;
     }
+
     button {
       background-color: #007BFF;
       color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
+      transition: background-color 0.3s ease;
     }
+
     button:hover {
       background-color: #0056b3;
     }
+
     #map {
       width: 80%;
+      max-width: 800px;
       height: 300px;
-      margin: 20px 0;
+      margin-top: 20px;
       border-radius: 10px;
     }
+
     #status-message {
+      margin-top: 10px;
       color: red;
       font-size: 14px;
-      margin-top: 10px;
+      text-align: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      padding: 20px;
       text-align: center;
     }
   </style>
 </head>
 <body>
-  <h1>Выбор района и адреса</h1>
-  
-  <label for="district-select">Выберите район:</label>
-  <select id="district-select">
-    <option value="">-- Выберите район --</option>
-    <option value="Ворошиловский">Ворошиловский район</option>
-    <option value="Калининский">Калининский район</option>
-    <option value="Кировский">Кировский район</option>
-  </select>
+  <div class="container">
+    <h1>Выберите адрес доставки</h1>
 
-  <label for="address-input">Введите адрес:</label>
-  <input type="text" id="address-input" placeholder="Улица, дом">
+    <!-- Выбор района -->
+    <select id="district-select">
+      <option value="">Выберите район</option>
+      <option value="Ворошиловский">Ворошиловский район</option>
+      <option value="Калининский">Калининский район</option>
+      <option value="Кировский">Кировский район</option>
+    </select>
 
-  <button id="confirm-address">Подтвердить адрес</button>
-  <p id="status-message"></p>
+    <!-- Ввод адреса -->
+    <input type="text" id="address-input" placeholder="Введите адрес">
 
-  <div id="map"></div>
+    <!-- Кнопка подтверждения -->
+    <button id="confirm-button" disabled>Подтвердить адрес</button>
+
+    <!-- Карта -->
+    <div id="map"></div>
+
+    <!-- Сообщение -->
+    <p id="status-message"></p>
+  </div>
 
   <script>
+    ymaps.ready(init);
+    let myMap, marker;
+
     const districtSelect = document.getElementById("district-select");
     const addressInput = document.getElementById("address-input");
-    const confirmButton = document.getElementById("confirm-address");
+    const confirmButton = document.getElementById("confirm-button");
     const statusMessage = document.getElementById("status-message");
 
-    // Список адресов по районам
+    // Адреса по районам
     const addressData = {
-      "Ворошиловский": ["ул. Пушкина, 1", "ул. Ленина, 10", "ул. Артёма, 20"],
-      "Калининский": ["ул. Молодёжная, 5", "ул. Заводская, 15", "ул. Промышленная, 30"],
-      "Кировский": ["ул. Шахтёрская, 12", "ул. Гвардейская, 25", "ул. Парковая, 50"]
+      "Ворошиловский": ["ул. Ленина, 10", "ул. Пушкина, 12", "ул. Артёма, 5"],
+      "Калининский": ["ул. Молодёжная, 15", "ул. Заводская, 20", "ул. Промышленная, 7"],
+      "Кировский": ["ул. Парковая, 8", "ул. Шахтёрская, 30", "ул. Гвардейская, 2"]
     };
 
-    // Обработка подтверждения адреса
-    confirmButton.addEventListener("click", () => {
-      const selectedDistrict = districtSelect.value;
-      const enteredAddress = addressInput.value.trim();
+    function init() {
+      myMap = new ymaps.Map("map", {
+        center: [48.0159, 37.8028], // Центр Донецка
+        zoom: 12,
+        controls: ["zoomControl"]
+      });
 
-      if (!selectedDistrict) {
-        statusMessage.textContent = "Пожалуйста, выберите район.";
-        return;
-      }
+      // Обработка ввода адреса
+      confirmButton.addEventListener("click", () => {
+        const selectedDistrict = districtSelect.value;
+        const enteredAddress = addressInput.value.trim();
 
-      if (!enteredAddress) {
-        statusMessage.textContent = "Пожалуйста, введите адрес.";
-        return;
-      }
+        if (!selectedDistrict) {
+          statusMessage.textContent = "Пожалуйста, выберите район.";
+          return;
+        }
 
-      if (addressData[selectedDistrict].includes(enteredAddress)) {
-        statusMessage.style.color = "green";
-        statusMessage.textContent = `Ваш адрес: ${enteredAddress} успешно подтверждён.`;
-        showMapForAddress(enteredAddress);
-      } else {
-        statusMessage.style.color = "red";
-        statusMessage.textContent = "Адрес не найден в выбранном районе. Проверьте введённые данные.";
-      }
-    });
+        if (!enteredAddress) {
+          statusMessage.textContent = "Пожалуйста, введите адрес.";
+          return;
+        }
 
-    // Показ карты с адресом
-    function showMapForAddress(address) {
-      ymaps.ready(() => {
-        const myMap = new ymaps.Map("map", {
-          center: [48.0159, 37.8028], // Центр Донецка
-          zoom: 12,
-          controls: ["zoomControl", "searchControl"]
-        });
+        if (addressData[selectedDistrict].includes(enteredAddress)) {
+          statusMessage.style.color = "green";
+          statusMessage.textContent = `Ваш адрес: ${enteredAddress} успешно подтверждён.`;
+          showAddressOnMap(enteredAddress);
+        } else {
+          statusMessage.style.color = "red";
+          statusMessage.textContent = "Адрес не найден в выбранном районе. Проверьте введённые данные.";
+        }
+      });
 
-        ymaps.geocode(address, { results: 1 }).then(res => {
-          const firstGeoObject = res.geoObjects.get(0);
-          if (firstGeoObject) {
-            const coords = firstGeoObject.geometry.getCoordinates();
-            myMap.geoObjects.add(new ymaps.Placemark(coords, { balloonContent: address }));
-            myMap.setCenter(coords, 16);
+      addressInput.addEventListener("input", () => {
+        confirmButton.disabled = !addressInput.value || !districtSelect.value;
+      });
+    }
+
+    function showAddressOnMap(address) {
+      ymaps.geocode(address, { results: 1 }).then((res) => {
+        const firstGeoObject = res.geoObjects.get(0);
+        if (firstGeoObject) {
+          const coords = firstGeoObject.geometry.getCoordinates();
+          if (!marker) {
+            marker = new ymaps.Placemark(coords, { balloonContent: address });
+            myMap.geoObjects.add(marker);
           } else {
-            statusMessage.textContent = "Не удалось найти адрес на карте.";
+            marker.geometry.setCoordinates(coords);
           }
-        });
+          myMap.setCenter(coords, 16, { duration: 500 });
+        } else {
+          statusMessage.style.color = "red";
+          statusMessage.textContent = "Не удалось найти адрес на карте.";
+        }
       });
     }
   </script>
