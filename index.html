@@ -73,6 +73,31 @@
       border-radius: 10px;
     }
 
+    .autocomplete-suggestions {
+      position: absolute;
+      top: calc(100% + 5px);
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1000;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .autocomplete-suggestion {
+      padding: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+
+    .autocomplete-suggestion:hover {
+      background-color: #f0f0f0;
+    }
+
     .success-popup {
       position: fixed;
       top: 50%;
@@ -114,6 +139,7 @@
     <h1>Введите адрес доставки</h1>
     <div style="position: relative;">
       <input type="text" id="address-input" placeholder="Начните вводить адрес">
+      <div id="autocomplete-suggestions" class="autocomplete-suggestions"></div>
     </div>
     <div id="map"></div>
     <button id="address-confirm-button" disabled>Подтвердить адрес</button>
@@ -133,65 +159,86 @@
   </div>
 
   <script>
-    const SUPABASE_URL = "https://dphpxlsknivxzmfsotee.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwaHB4bHNrbml2eHptZnNvdGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcwNDQ4MzcsImV4cCI6MjA1MjYyMDgzN30.hIWjMFJ6O83ekIjogkVOdR-L-lzV2zhjvjYq88yY_Bk";
+    ymaps.ready(init);
+    let myMap, marker;
 
-    async function saveUserData(name, address, phone) {
-      try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "apikey": SUPABASE_KEY,
-            "Authorization": `Bearer ${SUPABASE_KEY}`
-          },
-          body: JSON.stringify({
-            name: name,
-            address: address,
-            phone: phone,
-            created_at: new Date().toISOString()
-          })
+    function init() {
+      myMap = new ymaps.Map("map", {
+        center: [48.0159, 37.8028],
+        zoom: 13,
+        controls: []
+      });
+
+      document.getElementById("address-input").addEventListener("input", onInputAddress);
+      document.getElementById("address-confirm-button").addEventListener("click", () => {
+        showSection("phone-section");
+      });
+    }
+
+    function onInputAddress() {
+      const query = document.getElementById("address-input").value;
+      if (query.length < 3) return;
+
+      ymaps.geocode(query, { boundedBy: [[47.8, 37.6], [48.2, 38.0]], strictBounds: true }).then(res => {
+        const suggestions = [];
+        res.geoObjects.each(geoObject => {
+          suggestions.push({
+            name: geoObject.getAddressLine(),
+            coords: geoObject.geometry.getCoordinates()
+          });
         });
 
-        if (!response.ok) {
-          throw new Error("Ошибка при сохранении данных пользователя");
-        }
-      } catch (error) {
-        console.error(error);
-        alert("Произошла ошибка при регистрации. Попробуйте снова.");
+        updateAutocompleteSuggestions(suggestions);
+      });
+    }
+
+    function updateAutocompleteSuggestions(suggestions) {
+      const suggestionsContainer = document.getElementById("autocomplete-suggestions");
+      suggestionsContainer.innerHTML = "";
+
+      suggestions.forEach(suggestion => {
+        const suggestionElement = document.createElement("div");
+        suggestionElement.className = "autocomplete-suggestion";
+        suggestionElement.textContent = suggestion.name;
+        suggestionElement.addEventListener("click", () => {
+          selectSuggestion(suggestion);
+        });
+
+        suggestionsContainer.appendChild(suggestionElement);
+      });
+    }
+
+    function selectSuggestion(suggestion) {
+      document.getElementById("address-input").value = suggestion.name;
+      document.getElementById("autocomplete-suggestions").innerHTML = "";
+      myMap.setCenter(suggestion.coords, 16);
+
+      if (!marker) {
+        marker = new ymaps.Placemark(suggestion.coords, {}, { draggable: true });
+        myMap.geoObjects.add(marker);
+      } else {
+        marker.geometry.setCoordinates(suggestion.coords);
       }
+
+      document.getElementById("address-confirm-button").disabled = false;
     }
 
     document.getElementById("name-button").addEventListener("click", () => {
       const name = document.getElementById("name-input").value;
       if (name.trim() === "") {
         alert("Пожалуйста, введите ваше имя.");
-        return;
+      } else {
+        showSection("address-section");
       }
-      showSection("address-section");
     });
 
-    document.getElementById("address-confirm-button").addEventListener("click", () => {
-      const address = document.getElementById("address-input").value;
-      if (address.trim() === "") {
-        alert("Пожалуйста, введите ваш адрес.");
-        return;
-      }
-      showSection("phone-section");
-    });
-
-    document.getElementById("phone-button").addEventListener("click", async () => {
-      const name = document.getElementById("name-input").value;
-      const address = document.getElementById("address-input").value;
+    document.getElementById("phone-button").addEventListener("click", () => {
       const phone = document.getElementById("phone-input").value;
-
       if (phone.trim() === "") {
         alert("Пожалуйста, введите ваш номер телефона.");
-        return;
+      } else {
+        showSuccessPopup();
       }
-
-      await saveUserData(name, address, phone);
-      showSuccessPopup();
     });
 
     function showSection(sectionId) {
@@ -209,14 +256,6 @@
         window.location.href = "menu.html"; // Перенаправление на menu.html
       }, 3000);
     }
-
-    ymaps.ready(() => {
-      const myMap = new ymaps.Map("map", {
-        center: [48.0159, 37.8028],
-        zoom: 13,
-        controls: []
-      });
-    });
   </script>
 </body>
 </html>
