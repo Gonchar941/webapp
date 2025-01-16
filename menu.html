@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DonCourier - Меню</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f9;
+      color: #333;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .section {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .section.active {
+      display: block;
+      opacity: 1;
+    }
+
+    .menu {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: #007BFF;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      display: flex;
+      justify-content: space-around;
+      font-size: 16px;
+      box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .menu a {
+      color: white;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.3s ease, color 0.3s ease;
+    }
+
+    .menu a:hover {
+      transform: scale(1.1);
+      color: #ddd;
+    }
+
+    .menu i {
+      font-size: 24px;
+      margin-bottom: 5px;
+    }
+
+    .menu span {
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container section active" id="shop-section">
+    <h1>Магазин</h1>
+    <p>Здесь отображаются товары и категории магазина.</p>
+  </div>
+
+  <div class="container section" id="cart-section">
+    <h1>Корзина</h1>
+    <p>Здесь будут находиться товары, добавленные в корзину.</p>
+  </div>
+
+  <div class="container section" id="contacts-section">
+    <h1>Контакты</h1>
+    <p>Email: support@doncourier.com</p>
+    <p>Телефон: +380 50 123 45 67</p>
+  </div>
+
+  <div class="container section" id="profile-section">
+    <h1>Профиль</h1>
+    <p>Здесь отображается информация о вашем аккаунте.</p>
+  </div>
+
+  <div class="menu">
+    <a href="#" onclick="showSection('shop-section')">
+      <i class="fa fa-shopping-bag"></i>
+      <span>Магазин</span>
+    </a>
+    <a href="#" onclick="showSection('cart-section')">
+      <i class="fa fa-shopping-cart"></i>
+      <span>Корзина</span>
+    </a>
+    <a href="#" onclick="showSection('contacts-section')">
+      <i class="fa fa-envelope"></i>
+      <span>Контакты</span>
+    </a>
+    <a href="#" onclick="showSection('profile-section')">
+      <i class="fa fa-user"></i>
+      <span>Профиль</span>
+    </a>
+  </div>
+
+  <script>
+    function showSection(sectionId) {
+      document.querySelectorAll('.section').forEach(section => {
+        section.classList.remove('active');
+      });
+      document.getElementById(sectionId).classList.add('active');
+    }
+  </script>
+</body>
+</html>
