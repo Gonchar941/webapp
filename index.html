@@ -3,151 +3,144 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Выбор адреса</title>
+  <title>Регистрация</title>
+  <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=81d0c68b-726a-45d1-863f-27efffade502"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #f9f9f9;
+      background-color: #f4f4f9;
     }
+
     .container {
+      max-width: 400px;
+      margin: 50px auto;
       padding: 20px;
-      max-width: 600px;
-      margin: 0 auto;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
-    input, select, button {
+
+    .container h1 {
+      text-align: center;
+      color: #007BFF;
+      margin-bottom: 20px;
+    }
+
+    .container label {
+      display: block;
+      margin-top: 10px;
+      color: #555;
+      font-weight: bold;
+    }
+
+    .container input, .container button {
       width: 100%;
       padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
       font-size: 16px;
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
     }
-    ul {
-      list-style-type: none;
-      padding: 0;
-      margin: 0;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      background-color: white;
+
+    .container input:focus {
+      border-color: #007BFF;
+      outline: none;
     }
-    li {
-      padding: 10px;
+
+    .container button {
+      background-color: #28a745;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
       cursor: pointer;
+      border: none;
+      transition: background-color 0.3s ease, transform 0.2s ease;
     }
-    li:hover {
-      background-color: #f0f0f0;
+
+    .container button:hover {
+      background-color: #218838;
+      transform: scale(1.05);
+    }
+
+    .hint {
+      background-color: #007BFF;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      border-radius: 5px;
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      animation: fadeOut 5s forwards;
+    }
+
+    @keyframes fadeOut {
+      0% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { opacity: 0; display: none; }
     }
   </style>
 </head>
 <body>
+  <!-- Подсказка -->
+  <div class="hint">Разверните приложение на весь экран для удобной работы!</div>
+
+  <!-- Регистрационная форма -->
   <div class="container">
-    <h1>Выберите адрес</h1>
-    
-    <!-- Поле для выбора района -->
-    <label for="district-select">Выберите район:</label>
-    <select id="district-select">
-      <option value="">-- Выберите район --</option>
-      <option value="Ворошиловский район">Ворошиловский район</option>
-      <option value="Калининский район">Калининский район</option>
-      <option value="Кировский район">Кировский район</option>
-    </select>
+    <h1>Регистрация</h1>
+    <label for="name">ФИО:</label>
+    <input type="text" id="name" placeholder="Введите ваше ФИО" required>
 
-    <!-- Поле для ввода улицы -->
-    <label for="street-input">Введите улицу:</label>
-    <input type="text" id="street-input" placeholder="Начните вводить улицу..." disabled />
-    <ul id="street-suggestions"></ul>
+    <label for="address">Адрес:</label>
+    <input type="text" id="address" placeholder="Введите ваш адрес" required>
+    <button id="auto-detect">Определить адрес автоматически</button>
 
-    <!-- Поле для выбора дома -->
-    <label for="house-select">Выберите дом:</label>
-    <select id="house-select" disabled>
-      <option value="">-- Сначала выберите улицу --</option>
-    </select>
+    <label for="phone">Номер телефона:</label>
+    <input type="tel" id="phone" placeholder="+7 000 000 00 00" required>
 
-    <!-- Кнопка подтверждения -->
-    <button id="confirm-button" disabled>Подтвердить адрес</button>
+    <button id="submit-button">Зарегистрироваться</button>
   </div>
 
   <script>
-    const streetsByDistrict = {
-      "Ворошиловский район": {
-        "Пушкина": ["1", "2", "3", "4"],
-        "Ленина": ["5", "6", "7"],
-        "Университетская": ["8", "9", "10"],
-        "Шевченко": ["11", "12", "13"],
-      },
-      "Калининский район": {
-        "Гагарина": ["1", "2", "3", "4", "5"],
-        "Титова": ["10", "11", "12"],
-        "Кирова": ["20", "21", "22"],
-        "Пролетарская": ["30", "31", "32"],
-      },
-      "Кировский район": {
-        "Мира": ["1", "2", "3"],
-        "Парковая": ["4", "5", "6"],
-        "Донецкая": ["7", "8", "9"],
-        "Южная": ["10", "11", "12"],
-      },
-    };
+    // Автоопределение адреса через геолокацию
+    document.getElementById("auto-detect").addEventListener("click", () => {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          const { latitude, longitude } = position.coords;
 
-    const districtSelect = document.getElementById("district-select");
-    const streetInput = document.getElementById("street-input");
-    const streetSuggestions = document.getElementById("street-suggestions");
-    const houseSelect = document.getElementById("house-select");
-    const confirmButton = document.getElementById("confirm-button");
-
-    let selectedDistrict = "";
-    let streets = {};
-    let houses = [];
-
-    // Обработка выбора района
-    districtSelect.addEventListener("change", () => {
-      selectedDistrict = districtSelect.value;
-      streets = streetsByDistrict[selectedDistrict] || {};
-      streetInput.disabled = !selectedDistrict;
-      streetInput.value = "";
-      streetSuggestions.innerHTML = "";
-      houseSelect.innerHTML = "<option value=''>-- Сначала выберите улицу --</option>";
-      houseSelect.disabled = true;
-      confirmButton.disabled = true;
-    });
-
-    // Обработка ввода улицы
-    streetInput.addEventListener("input", () => {
-      const query = streetInput.value.toLowerCase();
-      const matches = Object.keys(streets).filter(street => street.toLowerCase().startsWith(query));
-
-      streetSuggestions.innerHTML = matches
-        .map(match => `<li>${match}</li>`)
-        .join("");
-
-      houseSelect.disabled = true;
-      confirmButton.disabled = true;
-    });
-
-    // Обработка выбора улицы
-    streetSuggestions.addEventListener("click", (e) => {
-      if (e.target.tagName === "LI") {
-        streetInput.value = e.target.textContent;
-        streetSuggestions.innerHTML = "";
-
-        houses = streets[streetInput.value] || [];
-        houseSelect.innerHTML = houses
-          .map(house => `<option value="${house}">${house}</option>`)
-          .join("");
-        houseSelect.disabled = false;
+          ymaps.geocode([latitude, longitude]).then((res) => {
+            const address = res.geoObjects.get(0).getAddressLine();
+            document.getElementById("address").value = address;
+          }).catch(() => {
+            alert("Не удалось определить адрес. Попробуйте позже.");
+          });
+        }, () => {
+          alert("Геолокация отключена или не поддерживается.");
+        });
+      } else {
+        alert("Ваш браузер не поддерживает геолокацию.");
       }
     });
 
-    // Обработка выбора дома
-    houseSelect.addEventListener("change", () => {
-      confirmButton.disabled = !houseSelect.value;
-    });
+    // Обработка регистрации
+    document.getElementById("submit-button").addEventListener("click", () => {
+      const name = document.getElementById("name").value.trim();
+      const address = document.getElementById("address").value.trim();
+      const phone = document.getElementById("phone").value.trim();
 
-    // Обработка нажатия на кнопку подтверждения
-    confirmButton.addEventListener("click", () => {
-      alert(`Ваш адрес: ${selectedDistrict}, ${streetInput.value}, дом ${houseSelect.value}`);
+      if (!name || !address || !phone) {
+        alert("Пожалуйста, заполните все поля!");
+        return;
+      }
+
+      alert(`Регистрация успешна!\n\nВаши данные:\nФИО: ${name}\nАдрес: ${address}\nТелефон: ${phone}`);
+      // Здесь можно отправить данные на сервер или сохранить их
     });
   </script>
 </body>
