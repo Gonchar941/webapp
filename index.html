@@ -72,6 +72,31 @@
       margin: 20px 0;
       border-radius: 10px;
     }
+
+    .autocomplete-suggestions {
+      position: absolute;
+      top: calc(100% + 5px);
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1000;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .autocomplete-suggestion {
+      padding: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+
+    .autocomplete-suggestion:hover {
+      background-color: #f0f0f0;
+    }
   </style>
 </head>
 <body>
@@ -87,7 +112,7 @@
   <!-- Адрес -->
   <div class="container section" id="address-section">
     <h1>Введите адрес доставки</h1>
-    <div class="autocomplete-container">
+    <div style="position: relative;">
       <input type="text" id="address-input" placeholder="Начните вводить адрес">
       <div id="autocomplete-suggestions" class="autocomplete-suggestions"></div>
     </div>
@@ -181,7 +206,7 @@
       if (phone.trim() === "") {
         alert("Пожалуйста, введите ваш номер телефона.");
       } else {
-        alert("Регистрация завершена!");
+        window.location.href = "menu.html"; // Перенаправление на menu.html
       }
     });
 
