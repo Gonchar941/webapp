@@ -4,7 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DonCourier</title>
+  <!-- Yandex Maps API -->
   <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=81d0c68b-726a-45d1-863f-27efffade502"></script>
+  <!-- Подключаем Supabase (через CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -159,6 +162,12 @@
   </div>
 
   <script>
+    // ИНИЦИАЛИЗАЦИЯ SUPABASE
+    const SUPABASE_URL = 'https://dphpxlsknivxzmfsotee.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwaHB4bHNrbml2eHptZnNvdGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcwNDQ4MzcsImV4cCI6MjA1MjYyMDgzN30.hIWjMFJ6O83ekIjogkVOdR-L-lzV2zhjvjYq88yY_Bk';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Переменные для карты
     ymaps.ready(init);
     let myMap, marker;
 
@@ -179,6 +188,7 @@
       const query = document.getElementById("address-input").value;
       if (query.length < 3) return;
 
+      // Для примера ограничены координаты, можно изменить или убрать boundedBy
       ymaps.geocode(query, { boundedBy: [[47.8, 37.6], [48.2, 38.0]], strictBounds: true }).then(res => {
         const suggestions = [];
         res.geoObjects.each(geoObject => {
@@ -223,24 +233,48 @@
       document.getElementById("address-confirm-button").disabled = false;
     }
 
+    // Переход к следующему шагу после ввода имени
     document.getElementById("name-button").addEventListener("click", () => {
-      const name = document.getElementById("name-input").value;
-      if (name.trim() === "") {
+      const name = document.getElementById("name-input").value.trim();
+      if (name === "") {
         alert("Пожалуйста, введите ваше имя.");
       } else {
         showSection("address-section");
       }
     });
 
-    document.getElementById("phone-button").addEventListener("click", () => {
-      const phone = document.getElementById("phone-input").value;
-      if (phone.trim() === "") {
-        alert("Пожалуйста, введите ваш номер телефона.");
-      } else {
+    // Завершение регистрации: ввод телефона, сохранение данных в Supabase
+    document.getElementById("phone-button").addEventListener("click", async () => {
+      const name = document.getElementById("name-input").value.trim();
+      const address = document.getElementById("address-input").value.trim();
+      const phone = document.getElementById("phone-input").value.trim();
+
+      if (!name || !address || !phone) {
+        alert("Пожалуйста, заполните все поля (имя, адрес, телефон).");
+        return;
+      }
+
+      try {
+        // Вставка в таблицу "users"
+        const { data, error } = await supabase
+          .from('users')
+          .insert([{ name, address, phone }]);
+
+        if (error) {
+          console.error("Ошибка вставки в Supabase:", error);
+          alert("Произошла ошибка при сохранении данных. Попробуйте снова.");
+          return;
+        }
+
+        // Если вставка успешна, показываем попап и редирект
         showSuccessPopup();
+      } catch (err) {
+        console.error("Непредвиденная ошибка:", err);
+        alert("Непредвиденная ошибка при сохранении данных.");
       }
     });
 
+    // Функция для переключения секций
     function showSection(sectionId) {
       document.querySelectorAll(".section").forEach(section => {
         section.classList.remove("active");
@@ -248,6 +282,7 @@
       document.getElementById(sectionId).classList.add("active");
     }
 
+    // Показ попапа и редирект на menu.html
     function showSuccessPopup() {
       const popup = document.getElementById("success-popup");
       popup.style.display = "block";
