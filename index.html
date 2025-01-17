@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>DonCourier</title>
-  <!-- Yandex Maps API -->
+  
+  <!-- Yandex Maps API (для отображения карты) -->
   <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=81d0c68b-726a-45d1-863f-27efffade502"></script>
-  <!-- Подключаем Supabase (через CDN) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
+  
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -43,7 +43,6 @@
     .section {
       display: none;
     }
-
     .section.active {
       display: block;
     }
@@ -64,7 +63,6 @@
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
-
     button:hover {
       background-color: #0056b3;
     }
@@ -89,14 +87,12 @@
       z-index: 1000;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
-
     .autocomplete-suggestion {
       padding: 10px;
       cursor: pointer;
       font-size: 14px;
       transition: background-color 0.3s;
     }
-
     .autocomplete-suggestion:hover {
       background-color: #f0f0f0;
     }
@@ -114,12 +110,10 @@
       z-index: 1000;
       display: none;
     }
-
     .success-popup h1 {
       font-size: 24px;
       color: #28a745;
     }
-
     .success-popup p {
       font-size: 16px;
       margin: 10px 0;
@@ -130,66 +124,75 @@
 <body>
   <div class="hint">Разверните приложение на весь экран для удобного использования!</div>
 
-  <!-- Имя -->
+  <!-- Шаг 1: Имя -->
   <div class="container section active" id="name-section">
     <h1>Введите ваше имя</h1>
-    <input type="text" id="name-input" placeholder="Введите ваше имя">
+    <input type="text" id="name-input" placeholder="Введите ваше имя" />
     <button id="name-button">Продолжить</button>
   </div>
 
-  <!-- Адрес -->
+  <!-- Шаг 2: Адрес -->
   <div class="container section" id="address-section">
     <h1>Введите адрес доставки</h1>
     <div style="position: relative;">
-      <input type="text" id="address-input" placeholder="Начните вводить адрес">
+      <input type="text" id="address-input" placeholder="Начните вводить адрес" />
       <div id="autocomplete-suggestions" class="autocomplete-suggestions"></div>
     </div>
     <div id="map"></div>
     <button id="address-confirm-button" disabled>Подтвердить адрес</button>
   </div>
 
-  <!-- Телефон -->
+  <!-- Шаг 3: Телефон -->
   <div class="container section" id="phone-section">
     <h1>Введите ваш номер телефона</h1>
-    <input type="text" id="phone-input" placeholder="Введите ваш номер телефона">
+    <input type="text" id="phone-input" placeholder="Введите ваш номер телефона" />
     <button id="phone-button">Завершить</button>
   </div>
 
-  <!-- Поздравление -->
+  <!-- Попап об успешной регистрации -->
   <div class="success-popup" id="success-popup">
     <h1>Регистрация успешна!</h1>
     <p>Добро пожаловать в DonCourier!</p>
   </div>
 
   <script>
-    // ИНИЦИАЛИЗАЦИЯ SUPABASE
-    const SUPABASE_URL = 'https://dphpxlsknivxzmfsotee.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwaHB4bHNrbml2eHptZnNvdGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcwNDQ4MzcsImV4cCI6MjA1MjYyMDgzN30.hIWjMFJ6O83ekIjogkVOdR-L-lzV2zhjvjYq88yY_Bk';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    //=====================================================
+    // 1) Укажите здесь свой Apps Script URL (скопируйте при развертывании)
+    //=====================================================
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxPSnFhTmxtpxxP7NmTMoRMz8Em4vec9T9Tg_KwvxqyIqf-rD5JBm2XSZRNTV2F8IvK/exec";
 
-    // Переменные для карты
-    ymaps.ready(init);
+    //=====================================================
+    // Яндекс.Карты: инициализация
+    //=====================================================
+    ymaps.ready(initYMap);
     let myMap, marker;
 
-    function init() {
+    function initYMap() {
       myMap = new ymaps.Map("map", {
-        center: [48.0159, 37.8028],
+        center: [48.0159, 37.8028],  // Пример для Донецка, поменяйте при необходимости
         zoom: 13,
         controls: []
       });
 
+      // При вводе текста в поле адреса запускаем функцию автокомплита
       document.getElementById("address-input").addEventListener("input", onInputAddress);
+
+      // Кнопка "Подтвердить адрес" -> Переходим на ввод телефона
       document.getElementById("address-confirm-button").addEventListener("click", () => {
         showSection("phone-section");
       });
     }
 
+    // Автокомплит адреса по Яндекс.Картам
     function onInputAddress() {
       const query = document.getElementById("address-input").value;
       if (query.length < 3) return;
 
-      // Для примера ограничены координаты, можно изменить или убрать boundedBy
-      ymaps.geocode(query, { boundedBy: [[47.8, 37.6], [48.2, 38.0]], strictBounds: true }).then(res => {
+      ymaps.geocode(query, {
+        // Ограничиваем область поиска (опционально)
+        boundedBy: [[47.8, 37.6], [48.2, 38.0]], 
+        strictBounds: true
+      }).then(res => {
         const suggestions = [];
         res.geoObjects.each(geoObject => {
           suggestions.push({
@@ -197,7 +200,6 @@
             coords: geoObject.geometry.getCoordinates()
           });
         });
-
         updateAutocompleteSuggestions(suggestions);
       });
     }
@@ -213,16 +215,19 @@
         suggestionElement.addEventListener("click", () => {
           selectSuggestion(suggestion);
         });
-
         suggestionsContainer.appendChild(suggestionElement);
       });
     }
 
     function selectSuggestion(suggestion) {
+      // Записываем выбранный адрес в input
       document.getElementById("address-input").value = suggestion.name;
+      // Очищаем подсказки
       document.getElementById("autocomplete-suggestions").innerHTML = "";
+      // Перемещаем карту в выбранные координаты
       myMap.setCenter(suggestion.coords, 16);
 
+      // Если маркер ещё не создан, создаём, иначе перемещаем
       if (!marker) {
         marker = new ymaps.Placemark(suggestion.coords, {}, { draggable: true });
         myMap.geoObjects.add(marker);
@@ -230,20 +235,21 @@
         marker.geometry.setCoordinates(suggestion.coords);
       }
 
+      // Делаем кнопку "Подтвердить адрес" доступной
       document.getElementById("address-confirm-button").disabled = false;
     }
 
     // Переход к следующему шагу после ввода имени
     document.getElementById("name-button").addEventListener("click", () => {
       const name = document.getElementById("name-input").value.trim();
-      if (name === "") {
+      if (!name) {
         alert("Пожалуйста, введите ваше имя.");
       } else {
         showSection("address-section");
       }
     });
 
-    // Завершение регистрации: ввод телефона, сохранение данных в Supabase
+    // Сохранение данных в Google Таблицу (через fetch на Apps Script)
     document.getElementById("phone-button").addEventListener("click", async () => {
       const name = document.getElementById("name-input").value.trim();
       const address = document.getElementById("address-input").value.trim();
@@ -254,27 +260,36 @@
         return;
       }
 
+      // Формируем JSON-данные для отправки
+      const payload = { name, address, phone };
+
       try {
-        // Вставка в таблицу "users"
-        const { data, error } = await supabase
-          .from('users')
-          .insert([{ name, address, phone }]);
+        // Делаем POST-запрос на Google Apps Script
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
 
-        if (error) {
-          console.error("Ошибка вставки в Supabase:", error);
-          alert("Произошла ошибка при сохранении данных. Попробуйте снова.");
-          return;
+        const result = await response.json();
+        console.log("Ответ от Google Apps Script:", result);
+
+        if (result.result === "success") {
+          // Если запись в таблицу успешна, показываем попап и редирект
+          showSuccessPopup();
+        } else {
+          // Если вернулась ошибка
+          alert("Произошла ошибка при сохранении данных: " + (result.message || ""));
         }
-
-        // Если вставка успешна, показываем попап и редирект
-        showSuccessPopup();
       } catch (err) {
-        console.error("Непредвиденная ошибка:", err);
+        console.error("Ошибка сети или fetch:", err);
         alert("Непредвиденная ошибка при сохранении данных.");
       }
     });
 
-    // Функция для переключения секций
+    // Переключение секций
     function showSection(sectionId) {
       document.querySelectorAll(".section").forEach(section => {
         section.classList.remove("active");
