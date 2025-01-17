@@ -11,19 +11,16 @@
   <style>
     body {
       font-family: 'Arial', sans-serif;
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0;
       background-color: #f4f4f9;
       color: #333;
       overflow-x: hidden;
     }
-
     .container {
       max-width: 1200px;
       margin: 0 auto;
       padding: 20px;
     }
-
     .hint {
       background-color: #007BFF;
       color: white;
@@ -33,20 +30,17 @@
       font-size: 16px;
       animation: fadeOut 3s forwards;
     }
-
     @keyframes fadeOut {
       0% { opacity: 1; }
       80% { opacity: 1; }
       100% { opacity: 0; display: none; }
     }
-
     .section {
       display: none;
     }
     .section.active {
       display: block;
     }
-
     select, input, button {
       width: 100%;
       padding: 10px;
@@ -55,7 +49,6 @@
       border: 1px solid #ccc;
       border-radius: 5px;
     }
-
     button {
       background-color: #007BFF;
       color: white;
@@ -66,14 +59,12 @@
     button:hover {
       background-color: #0056b3;
     }
-
     #map {
       width: 100%;
       height: 350px;
       margin: 20px 0;
       border-radius: 10px;
     }
-
     .autocomplete-suggestions {
       position: absolute;
       top: calc(100% + 5px);
@@ -96,7 +87,6 @@
     .autocomplete-suggestion:hover {
       background-color: #f0f0f0;
     }
-
     .success-popup {
       position: fixed;
       top: 50%;
@@ -156,20 +146,20 @@
   </div>
 
   <script>
-    //=====================================================
-    // 1) Укажите здесь свой Apps Script URL (скопируйте при развертывании)
-    //=====================================================
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxPSnFhTmxtpxxP7NmTMoRMz8Em4vec9T9Tg_KwvxqyIqf-rD5JBm2XSZRNTV2F8IvK/exec";
+    //==================================
+    // 1) ВАШ LINK на Apps Script + /exec
+    //==================================
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykkoVSom-d5lKa1swL774RcPaFiuF6Shb3i7XMeMa514xIIu2dB4FFqIYk5-pwCyzi/exec";
 
-    //=====================================================
+    //==================================
     // Яндекс.Карты: инициализация
-    //=====================================================
+    //==================================
     ymaps.ready(initYMap);
     let myMap, marker;
 
     function initYMap() {
       myMap = new ymaps.Map("map", {
-        center: [48.0159, 37.8028],  // Пример для Донецка, поменяйте при необходимости
+        center: [48.0159, 37.8028], // Пример для Донецка
         zoom: 13,
         controls: []
       });
@@ -189,8 +179,7 @@
       if (query.length < 3) return;
 
       ymaps.geocode(query, {
-        // Ограничиваем область поиска (опционально)
-        boundedBy: [[47.8, 37.6], [48.2, 38.0]], 
+        boundedBy: [[47.8, 37.6], [48.2, 38.0]], // Ограничение области (опционально)
         strictBounds: true
       }).then(res => {
         const suggestions = [];
@@ -205,29 +194,25 @@
     }
 
     function updateAutocompleteSuggestions(suggestions) {
-      const suggestionsContainer = document.getElementById("autocomplete-suggestions");
-      suggestionsContainer.innerHTML = "";
+      const container = document.getElementById("autocomplete-suggestions");
+      container.innerHTML = "";
 
-      suggestions.forEach(suggestion => {
-        const suggestionElement = document.createElement("div");
-        suggestionElement.className = "autocomplete-suggestion";
-        suggestionElement.textContent = suggestion.name;
-        suggestionElement.addEventListener("click", () => {
-          selectSuggestion(suggestion);
+      suggestions.forEach(sugg => {
+        const div = document.createElement("div");
+        div.className = "autocomplete-suggestion";
+        div.textContent = sugg.name;
+        div.addEventListener("click", () => {
+          selectSuggestion(sugg);
         });
-        suggestionsContainer.appendChild(suggestionElement);
+        container.appendChild(div);
       });
     }
 
     function selectSuggestion(suggestion) {
-      // Записываем выбранный адрес в input
       document.getElementById("address-input").value = suggestion.name;
-      // Очищаем подсказки
       document.getElementById("autocomplete-suggestions").innerHTML = "";
-      // Перемещаем карту в выбранные координаты
       myMap.setCenter(suggestion.coords, 16);
 
-      // Если маркер ещё не создан, создаём, иначе перемещаем
       if (!marker) {
         marker = new ymaps.Placemark(suggestion.coords, {}, { draggable: true });
         myMap.geoObjects.add(marker);
@@ -235,7 +220,6 @@
         marker.geometry.setCoordinates(suggestion.coords);
       }
 
-      // Делаем кнопку "Подтвердить адрес" доступной
       document.getElementById("address-confirm-button").disabled = false;
     }
 
@@ -249,7 +233,7 @@
       }
     });
 
-    // Сохранение данных в Google Таблицу (через fetch на Apps Script)
+    // Сохранение данных в Google Таблицу (через fetch)
     document.getElementById("phone-button").addEventListener("click", async () => {
       const name = document.getElementById("name-input").value.trim();
       const address = document.getElementById("address-input").value.trim();
@@ -260,32 +244,35 @@
         return;
       }
 
-      // Формируем JSON-данные для отправки
+      // Формируем JSON-данные
       const payload = { name, address, phone };
 
       try {
-        // Делаем POST-запрос на Google Apps Script
         const response = await fetch(GOOGLE_SCRIPT_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
 
+        // Проверим статус
+        console.log("Response status:", response.status, response.statusText);
+        if (!response.ok) {
+          alert("Ошибка при отправке: " + response.status + " " + response.statusText);
+          return;
+        }
+
+        // Парсим ответ
         const result = await response.json();
-        console.log("Ответ от Google Apps Script:", result);
+        console.log("Ответ от Apps Script:", result);
 
         if (result.result === "success") {
-          // Если запись в таблицу успешна, показываем попап и редирект
           showSuccessPopup();
         } else {
-          // Если вернулась ошибка
-          alert("Произошла ошибка при сохранении данных: " + (result.message || ""));
+          alert("Произошла ошибка при сохранении данных: " + JSON.stringify(result));
         }
       } catch (err) {
         console.error("Ошибка сети или fetch:", err);
-        alert("Непредвиденная ошибка при сохранении данных.");
+        alert("Непредвиденная ошибка при сохранении данных: " + err);
       }
     });
 
