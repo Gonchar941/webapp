@@ -160,11 +160,9 @@
   </div>
 
   <script>
-    const supabaseUrl = "https://dphpxlsknivxzmfsotee.supabase.co";
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwaHB4bHNrbml2eHptZnNvdGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcwNDQ4MzcsImV4cCI6MjA1MjYyMDgzN30.hIWjMFJ6O83ekIjogkVOdR-L-lzV2zhjvjYq88yY_Bk";
+    const supabaseUrl = 'https://dphpxlsknivxzmfsotee.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwaHB4bHNrbml2eHptZnNvdGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcwNDQ4MzcsImV4cCI6MjA1MjYyMDgzN30.hIWjMFJ6O83ekIjogkVOdR-L-lzV2zhjvjYq88yY_Bk';
     const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-    let userData = {};
 
     ymaps.ready(init);
     let myMap, marker;
@@ -178,7 +176,6 @@
 
       document.getElementById("address-input").addEventListener("input", onInputAddress);
       document.getElementById("address-confirm-button").addEventListener("click", () => {
-        userData.address = document.getElementById("address-input").value;
         showSection("phone-section");
       });
     }
@@ -236,22 +233,25 @@
       if (name.trim() === "") {
         alert("Пожалуйста, введите ваше имя.");
       } else {
-        userData.name = name;
         showSection("address-section");
       }
     });
 
     document.getElementById("phone-button").addEventListener("click", async () => {
+      const name = document.getElementById("name-input").value;
+      const address = document.getElementById("address-input").value;
       const phone = document.getElementById("phone-input").value;
+
       if (phone.trim() === "") {
         alert("Пожалуйста, введите ваш номер телефона.");
       } else {
-        userData.phone = phone;
         try {
-          const { error } = await supabase.from("users").insert([userData]);
-          if (error) {
-            throw error;
-          }
+          const { data, error } = await supabase.from('users').insert([
+            { name, address, phone }
+          ]);
+
+          if (error) throw error;
+
           showSuccessPopup();
         } catch (error) {
           alert("Ошибка при сохранении данных. Попробуйте ещё раз.");
