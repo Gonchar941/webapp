@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DonCourier</title>
   <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=81d0c68b-726a-45d1-863f-27efffade502"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -74,6 +73,31 @@
       border-radius: 10px;
     }
 
+    .autocomplete-suggestions {
+      position: absolute;
+      top: calc(100% + 5px);
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1000;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .autocomplete-suggestion {
+      padding: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+
+    .autocomplete-suggestion:hover {
+      background-color: #f0f0f0;
+    }
+
     .success-popup {
       position: fixed;
       top: 50%;
@@ -135,16 +159,6 @@
   </div>
 
   <script>
-    const supabaseUrl = "https://dphpxlsknivxzmfsotee.supabase.co";
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwaHB4bHNrbml2eHptZnNvdGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcwNDQ4MzcsImV4cCI6MjA1MjYyMDgzN30.hIWjMFJ6O83ekIjogkVOdR-L-lzV2zhjvjYq88yY_Bk";
-    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-    let userData = {
-      name: "",
-      address: "",
-      phone: ""
-    };
-
     ymaps.ready(init);
     let myMap, marker;
 
@@ -210,29 +224,21 @@
     }
 
     document.getElementById("name-button").addEventListener("click", () => {
-      const name = document.getElementById("name-input").value.trim();
-      if (name === "") {
+      const name = document.getElementById("name-input").value;
+      if (name.trim() === "") {
         alert("Пожалуйста, введите ваше имя.");
-        return;
+      } else {
+        showSection("address-section");
       }
-      userData.name = name;
-      showSection("address-section");
     });
 
-    document.getElementById("phone-button").addEventListener("click", async () => {
-      const phone = document.getElementById("phone-input").value.trim();
-      if (phone === "") {
-        alert("Пожалуйста, введите номер телефона.");
-        return;
+    document.getElementById("phone-button").addEventListener("click", () => {
+      const phone = document.getElementById("phone-input").value;
+      if (phone.trim() === "") {
+        alert("Пожалуйста, введите ваш номер телефона.");
+      } else {
+        showSuccessPopup();
       }
-      userData.phone = phone;
-
-      const { error } = await supabase.from("users").insert([userData]);
-      if (error) {
-        alert("Ошибка при сохранении данных: " + error.message);
-        return;
-      }
-      showSuccessPopup();
     });
 
     function showSection(sectionId) {
@@ -247,7 +253,7 @@
       popup.style.display = "block";
       setTimeout(() => {
         popup.style.display = "none";
-        window.location.href = "menu.html";
+        window.location.href = "menu.html"; // Перенаправление на menu.html
       }, 3000);
     }
   </script>
