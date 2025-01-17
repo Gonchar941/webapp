@@ -112,8 +112,8 @@
   <!-- Адрес -->
   <div class="container section" id="address-section">
     <h1>Введите адрес доставки</h1>
-    <input type="text" id="address-input" placeholder="Введите адрес">
-    <button id="address-confirm-button">Подтвердить адрес</button>
+    <input type="text" id="address-input" placeholder="Начните вводить адрес">
+    <button id="address-confirm-button" disabled>Подтвердить адрес</button>
   </div>
 
   <!-- Телефон -->
@@ -130,80 +130,81 @@
   </div>
 
   <script>
-    const SUPABASE_URL = "https://dphpxlsknivxzmfsotee.supabase.co";
-    const SUPABASE_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwaHB4bHNrbml2eHptZnNvdGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcwNDQ4MzcsImV4cCI6MjA1MjYyMDgzN30.hIWjMFJ6O83ekIjogkVOdR-L-lzV2zhjvjYq88yY_Bk";
+    // Инициализация карты
+    ymaps.ready(init);
+    let myMap;
 
-    let userData = {
-      name: "",
-      address: "",
-      phone: ""
-    };
+    function init() {
+      myMap = new ymaps.Map("map", {
+        center: [48.0159, 37.8028],
+        zoom: 13,
+        controls: []
+      });
+    }
+
+    const SUPABASE_URL = "https://dphpxlsknivxzmfsotee.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwaHB4bHNrbml2eHptZnNvdGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcwNDQ4MzcsImV4cCI6MjA1MjYyMDgzN30.hIWjMFJ6O83ekIjogkVOdR-L-lzV2zhjvjYq88yY_Bk";
+
+    async function saveToDatabase(data) {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SUPABASE_KEY,
+          "Authorization": `Bearer ${SUPABASE_KEY}`
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        throw new Error("Ошибка при сохранении данных");
+      }
+    }
 
     document.getElementById("name-button").addEventListener("click", () => {
       const name = document.getElementById("name-input").value;
-      if (!name.trim()) {
-        alert("Введите имя");
+      if (name.trim() === "") {
+        alert("Пожалуйста, введите ваше имя.");
         return;
       }
-      userData.name = name;
-      showSection("address-section");
+      document.getElementById("address-section").classList.add("active");
     });
 
     document.getElementById("address-confirm-button").addEventListener("click", () => {
       const address = document.getElementById("address-input").value;
-      if (!address.trim()) {
-        alert("Введите адрес");
+      if (address.trim() === "") {
+        alert("Пожалуйста, введите адрес.");
         return;
       }
-      userData.address = address;
-      showSection("phone-section");
+      document.getElementById("phone-section").classList.add("active");
     });
 
     document.getElementById("phone-button").addEventListener("click", async () => {
       const phone = document.getElementById("phone-input").value;
-      if (!phone.trim()) {
-        alert("Введите номер телефона");
+      const name = document.getElementById("name-input").value;
+      const address = document.getElementById("address-input").value;
+
+      if (phone.trim() === "") {
+        alert("Пожалуйста, введите номер телефона.");
         return;
       }
-      userData.phone = phone;
+
+      const userData = {
+        name,
+        address,
+        phone
+      };
 
       try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: SUPABASE_API_KEY,
-            Authorization: `Bearer ${SUPABASE_API_KEY}`
-          },
-          body: JSON.stringify(userData)
-        });
-
-        if (!response.ok) {
-          throw new Error("Ошибка при сохранении данных");
-        }
-
-        showSuccessPopup();
+        await saveToDatabase(userData);
+        document.getElementById("success-popup").style.display = "block";
+        setTimeout(() => {
+          window.location.href = "menu.html";
+        }, 3000);
       } catch (error) {
         alert("Ошибка при сохранении данных. Попробуйте ещё раз.");
-        console.error(error);
       }
     });
-
-    function showSection(sectionId) {
-      document.querySelectorAll(".section").forEach(section => {
-        section.classList.remove("active");
-      });
-      document.getElementById(sectionId).classList.add("active");
-    }
-
-    function showSuccessPopup() {
-      const popup = document.getElementById("success-popup");
-      popup.style.display = "block";
-      setTimeout(() => {
-        popup.style.display = "none";
-        window.location.href = "menu.html";
-      }, 3000);
-    }
   </script>
 </body>
 </html>
